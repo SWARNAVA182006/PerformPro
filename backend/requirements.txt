@@ -1,3 +1,12 @@
 fastapi
 uvicorn
 sqlalchemy
+passlib[bcrypt]
+pyjwt
+python-jose
+email-validator
+google-auth
+google-auth-oauthlib
+requests
+pydantic-settings
+python-dotenv

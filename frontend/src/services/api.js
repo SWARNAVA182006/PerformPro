@@ -1,7 +1,7 @@
 import axios from "axios";
 import useAuthStore from "../store/useAuthStore";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -42,19 +42,28 @@ api.interceptors.response.use(
 );
 
 export const authApi = {
-    login: (email, password) => api.post("/auth/login", { email, password }),
-    register: (userData) => api.post("/auth/register", userData),
-    getMe: () => api.get("/auth/me")
+    login: async (email, password) => {
+        const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
+        return response.data;
+    },
+    signup: (userData) => api.post("/auth/signup", userData),
+    googleLogin: (credential) => api.post("/auth/google", { credential }),
+    getMe: () => api.get("/auth/me"),
+    updateMe: (profileData) => api.put("/auth/me", profileData)
 };
 
 export const dashboardApi = {
-    getStats: () => api.get("/dashboard/stats"),
+    getAnalytics: () => api.get("/analytics/dashboard"),
+    getPerformanceTrends: () => api.get("/analytics/performance-trends"),
+    getDepartmentEngagement: () => api.get("/analytics/department-engagement"),
+    getActivityFeed: () => api.get("/analytics/activity-feed")
 };
 
 export const employeeApi = {
     getAll: (params) => api.get("/employees/", { params }),
     getById: (id) => api.get(`/employees/${id}`),
     create: (data) => api.post("/employees/", data),
+    update: (id, data) => api.put(`/employees/${id}`, data)
 };
 
 export const departmentApi = {
@@ -72,8 +81,8 @@ export const notificationApi = {
 };
 
 export const reportApi = {
-    downloadEmployeeCSV: (deptId) => api.get("/reports/employees/csv", {
-        params: { department_id: deptId },
+    downloadEmployeeReport: (deptId, format = "csv") => api.get("/reports/employees", {
+        params: { department_id: deptId, format },
         responseType: 'blob'
     })
 };

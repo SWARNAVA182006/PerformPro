@@ -28,4 +28,4 @@ app.mount("/files", StaticFiles(directory="app/uploads"), name="files")
 def root():
     return {"message": "PerformPro API is live and modularized!", "docs": "/docs"}
 
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router)

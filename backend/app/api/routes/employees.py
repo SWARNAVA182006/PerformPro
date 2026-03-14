@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.employee import Employee
 from app.models.user import User, RoleEnum
 from app.api.dependencies import get_current_user, require_role
+from app.services.notification_service import notification_service
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -16,6 +17,9 @@ class EmployeeResponseData(BaseModel):
     name: str
     email: EmailStr
     role: str
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    profile_image_url: Optional[str] = None
     department_id: Optional[int]
     manager_id: Optional[int]
     status: str
@@ -29,8 +33,21 @@ class EmployeeCreate(BaseModel):
     name: str
     email: EmailStr
     role: str
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    profile_image_url: Optional[str] = None
     department_id: Optional[int] = None
     manager_id: Optional[int] = None
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    department_id: Optional[int] = None
+    manager_id: Optional[int] = None
+    status: Optional[str] = None
 
 @router.post("/", response_model=dict)
 def create_employee(
@@ -46,6 +63,16 @@ def create_employee(
     db.add(db_emp)
     db.commit()
     db.refresh(db_emp)
+    
+    # Try to notify if user is already linked (unlikely at employee creation but possible if done during signup)
+    if db_emp.user_id:
+        notification_service.create_notification(
+            db=db,
+            user_id=db_emp.user_id,
+            title="Welcome to PerformPro!",
+            message="Your employee profile has been created and linked to your account."
+        )
+        
     return {
         "success": True,
         "data": EmployeeResponseData.from_orm(db_emp).dict(),
@@ -111,5 +138,30 @@ def get_employee(
         "success": True,
         "data": EmployeeResponseData.from_orm(emp).dict(),
         "message": "Employee retrieved successfully",
+        "pagination": None
+    }
+
+@router.put("/{emp_id}", response_model=dict)
+def update_employee(
+    emp_id: int, 
+    emp_update: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER]))
+):
+    emp = db.query(Employee).filter(Employee.id == emp_id).first()
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+        
+    update_data = emp_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(emp, key, value)
+        
+    db.commit()
+    db.refresh(emp)
+    
+    return {
+        "success": True,
+        "data": EmployeeResponseData.from_orm(emp).dict(),
+        "message": "Employee updated successfully",
         "pagination": None
     }

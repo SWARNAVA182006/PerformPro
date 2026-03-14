@@ -3,8 +3,9 @@ import { dashboardApi } from '../services/api';
 import useAuthStore from '../store/useAuthStore';
 import { SkeletonDashboard } from '../components/SkeletonLoader';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { Users, Target, Activity, Award } from 'lucide-react';
+import { Users, Target, Activity, Award, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatDistanceToNow } from 'date-fns';
 
 const StatCard = ({ title, value, icon: Icon, trend }) => (
   <motion.div
@@ -37,37 +38,30 @@ const StatCard = ({ title, value, icon: Icon, trend }) => (
 const Dashboard = () => {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [trends, setTrends] = useState([]);
+  const [departmentData, setDepartmentData] = useState([]);
+  const [activities, setActivities] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // We use standard API response mapping here
-        const res = await dashboardApi.getStats();
-        if (res.success) {
-          // For the sake of UI we structure real/mock enterprise data based on the API response structure if it exists
-          setStats(res.stats || []);
-
-          // Mock rich enterprise data if backend trends aren't fully shaped yet
-          if (res.trends && res.trends.length > 0) {
-            setTrends(res.trends);
-          } else {
-            setTrends([
-              { month: 'Jan', performance: 65, attendance: 90 },
-              { month: 'Feb', performance: 70, attendance: 92 },
-              { month: 'Mar', performance: 68, attendance: 88 },
-              { month: 'Apr', performance: 80, attendance: 95 },
-              { month: 'May', performance: 85, attendance: 96 },
-              { month: 'Jun', performance: 88, attendance: 97 }
-            ]);
-          }
-        }
+        const [analyticsRes, trendsRes, deptRes, activityRes] = await Promise.all([
+          dashboardApi.getAnalytics(),
+          dashboardApi.getPerformanceTrends(),
+          dashboardApi.getDepartmentEngagement(),
+          dashboardApi.getActivityFeed()
+        ]);
+        
+        if (analyticsRes.success) setAnalytics(analyticsRes.data);
+        if (trendsRes.success) setTrends(trendsRes.data);
+        if (deptRes.success) setDepartmentData(deptRes.data);
+        if (activityRes.success) setActivities(activityRes.data);
+        
       } catch (error) {
         console.error("Dashboard fetch error:", error);
       } finally {
-        // Artificial delay for showcase purposes of skeleton 
-        setTimeout(() => setLoading(false), 600);
+        setLoading(false);
       }
     };
     fetchDashboardData();
@@ -75,8 +69,40 @@ const Dashboard = () => {
 
   if (loading) return <SkeletonDashboard />;
 
-  // Helper map to pull specific backend stats by title safely
-  const getStat = (title) => stats?.find(s => s.title === title)?.value || 0;
+  const renderRoleSpecificContent = () => {
+    switch (user?.role) {
+      case 'Admin':
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-indigo-50 border border-indigo-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-lg font-bold text-indigo-900 mb-2">Admin Tools</h3>
+            <p className="text-indigo-700">Access System Analytics and full User Management capabilities over the entire organization.</p>
+          </motion.div>
+        );
+      case 'Manager':
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-lg font-bold text-blue-900 mb-2">Manager Actions</h3>
+            <p className="text-blue-700">Review your Team's Performance, approve pending Appraisals, and manage goal setups.</p>
+          </motion.div>
+        );
+      case 'Employee':
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-green-50 border border-green-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-lg font-bold text-green-900 mb-2">My Performance Focus</h3>
+            <p className="text-green-700">Submit Self-Appraisals, provide 360-degree feedback, and monitor your personal growth KPIs.</p>
+          </motion.div>
+        );
+      case 'Client':
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Client View</h3>
+            <p className="text-gray-600">Limited Read-Only Access to selected operational metrics provided by the organization.</p>
+          </motion.div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -99,26 +125,26 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Workforce"
-          value={getStat("Total Employees")}
+          value={analytics?.workforce_total || 0}
           icon={Users}
           trend="+12%"
         />
         <StatCard
           title="Avg Performance KPI"
-          value={`${getStat("Avg KPI Score")}%`}
+          value={`${analytics?.avg_kpi || 0}%`}
           icon={Target}
           trend="+5.4%"
         />
         <StatCard
           title="Active Appraisals"
-          value={getStat("Pending Appraisals")}
+          value={analytics?.active_appraisals || 0}
           icon={Activity}
         />
         <StatCard
-          title="Top Performers"
-          value={getStat("High Performers") || "12"}
+          title="Top Performer (Score)"
+          value={analytics?.top_performers?.[0]?.score ? `${analytics.top_performers[0].score}%` : "N/A"}
           icon={Award}
-          trend="+2"
+          trend={analytics?.top_performers?.[0]?.name}
         />
       </div>
 
@@ -167,19 +193,52 @@ const Dashboard = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">Department Engagement</h3>
           <div className="h-80 w-full pr-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[
-                { name: 'Eng', score: 85 },
-                { name: 'Sales', score: 92 },
-                { name: 'HR', score: 78 },
-                { name: 'Mktg', score: 88 }
-              ]} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
+              <BarChart data={departmentData} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#4b5563', fontWeight: 500 }} />
                 <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px' }} />
-                <Bar dataKey="score" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
+                <Bar dataKey="performance" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
+                <Bar dataKey="engagement" fill="#E5E7EB" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Role-Based Panel & Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+            {renderRoleSpecificContent()}
+        </div>
+        
+        {/* Global Activity Feed */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden h-96 flex flex-col mt-8"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-gray-500" />
+            Global Activity Feed
+          </h3>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            {activities.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center mt-4">No recent activity.</p>
+            ) : (
+                activities.map((activity, idx) => (
+                    <div key={idx} className="flex border-b border-gray-50 pb-3 last:border-0">
+                        <div className="mt-1 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mr-3"></div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-800">{activity.action}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                {activity.entity} #{activity.entity_id} • {activity.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 'Recently'}
+                            </p>
+                        </div>
+                    </div>
+                ))
+            )}
           </div>
         </motion.div>
       </div>

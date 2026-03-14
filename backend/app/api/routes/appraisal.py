@@ -5,6 +5,7 @@ from app.api.dependencies import get_current_user, require_role
 from app.models.user import User, RoleEnum
 from app.schemas.appraisal import SelfAppraisalCreate, ManagerReviewCreate, AppraisalResponse
 from app.services.appraisal_service import appraisal_service
+from app.services.notification_service import notification_service
 
 router = APIRouter()
 
@@ -26,6 +27,18 @@ def submit_self_appraisal(
         self_rating=eval_data.self_rating,
         self_comments=eval_data.self_comments
     )
+    
+    # Notify Manager
+    emp = db.query(Employee).filter(Employee.id == eval_data.employee_id).first()
+    if emp and emp.manager_id:
+        manager_emp = db.query(Employee).filter(Employee.id == emp.manager_id).first()
+        if manager_emp and manager_emp.user_id:
+            notification_service.create_notification(
+                db=db,
+                user_id=manager_emp.user_id,
+                title="New Appraisal Pending Review",
+                message=f"{emp.name} has submitted their self-appraisal and is waiting for your review."
+            )
     
     return {
         "success": True,
@@ -53,6 +66,17 @@ def submit_manager_review(
         manager_comments=review_data.manager_comments,
         approved=review_data.approved
     )
+    
+    # Notify Employee
+    emp = db.query(Employee).filter(Employee.id == appraisal.employee_id).first()
+    if emp and emp.user_id:
+        status_text = "approved" if review_data.approved else "rejected"
+        notification_service.create_notification(
+            db=db,
+            user_id=emp.user_id,
+            title=f"Appraisal {status_text.capitalize()}",
+            message=f"Your manager has {status_text} your latest performance appraisal."
+        )
     
     return {
         "success": True,

@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { employeeApi, skillApi, feedbackApi, appraisalApi } from "../services/api";
 import { motion } from "framer-motion";
-import { Award, MessageSquare, ChevronLeft, Plus, Star, Target, TrendingUp } from "lucide-react";
+import { Award, MessageSquare, ChevronLeft, Plus, Star, Target, TrendingUp, Edit2 } from "lucide-react";
 import Modal from "../components/Modal";
+import useAuthStore from "../store/useAuthStore";
 
 export default function EmployeeProfile() {
     const { id } = useParams();
@@ -14,10 +15,25 @@ export default function EmployeeProfile() {
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const { user } = useAuthStore();
     const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [skillFormData, setSkillFormData] = useState({ skill_name: "", proficiency_level: "Intermediate" });
     const [feedbackFormData, setFeedbackFormData] = useState({ feedback_text: "", given_by: "Manager" });
+    const [editFormData, setEditFormData] = useState({});
+
+    useEffect(() => {
+        if (employee) {
+            setEditFormData({
+                name: employee.name || "",
+                role: employee.role || "",
+                phone: employee.phone || "",
+                bio: employee.bio || "",
+                status: employee.status || "Active"
+            });
+        }
+    }, [employee]);
 
     useEffect(() => {
         loadData();
@@ -64,6 +80,17 @@ export default function EmployeeProfile() {
         }
     };
 
+    const handleEditEmployee = async (e) => {
+        e.preventDefault();
+        try {
+            await employeeApi.update(id, editFormData);
+            setIsEditModalOpen(false);
+            loadData();
+        } catch (error) {
+            console.error("Error updating employee:", error);
+        }
+    };
+
     if (loading) return (
         <div className="flex items-center justify-center h-[60vh]">
             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
@@ -99,7 +126,15 @@ export default function EmployeeProfile() {
                         </span>
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                    {(user?.role === 'Admin' || user?.role === 'Manager') && (
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="px-4 py-2 rounded-xl border border-white/20 text-white hover:bg-white/10 transition-all text-sm font-semibold flex items-center gap-2"
+                        >
+                            <Edit2 size={16} /> Edit Profile
+                        </button>
+                    )}
                     <button
                         onClick={() => setIsFeedbackModalOpen(true)}
                         className="px-4 py-2 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-all text-sm font-semibold"
@@ -250,6 +285,64 @@ export default function EmployeeProfile() {
                         <p className="text-[10px] text-slate-500 mt-2 italic">Resulting sentiment will be analyzed by AI.</p>
                     </div>
                     <button type="submit" className="w-full btn-primary py-3">Submit Feedback</button>
+                </form>
+            </Modal>
+
+            {/* Edit Employee Modal */}
+            <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Employee Profile">
+                <form onSubmit={handleEditEmployee} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
+                        <input
+                            required
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-indigo-500"
+                            value={editFormData.name || ""}
+                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">Role Title</label>
+                            <input
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-indigo-500"
+                                value={editFormData.role || ""}
+                                onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">Status</label>
+                            <select
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-indigo-500"
+                                value={editFormData.status || "Active"}
+                                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                            >
+                                <option value="Active" className="bg-slate-800">Active</option>
+                                <option value="Inactive" className="bg-slate-800">Inactive</option>
+                                <option value="On Leave" className="bg-slate-800">On Leave</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Phone Number</label>
+                        <input
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-indigo-500"
+                            placeholder="+1 (555) 000-0000"
+                            value={editFormData.phone || ""}
+                            onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Bio</label>
+                        <textarea
+                            rows={3}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-indigo-500"
+                            placeholder="Short biography or notes..."
+                            value={editFormData.bio || ""}
+                            onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
+                        />
+                    </div>
+                    <button type="submit" className="w-full btn-primary py-3 mt-4">Save Changes</button>
                 </form>
             </Modal>
         </div>

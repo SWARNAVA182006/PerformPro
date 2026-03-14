@@ -30,7 +30,14 @@ body {
 }
 
 .btn-primary {
-  @apply bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95;
+  @apply bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Global Input Styling to enforce text-black as requested, with focus animations */
+input:not([type="checkbox"]):not([type="radio"]), 
+textarea, 
+select {
+  @apply text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none;
 }
 
 .nav-link {

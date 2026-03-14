@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import { motion } from 'framer-motion';
 
 // Layouts component to hold Sidebar/Topbar
 import Layout from './components/Layout';
@@ -12,11 +13,26 @@ const Employees = lazy(() => import('./pages/Employees'));
 const EmployeeProfile = lazy(() => import('./pages/EmployeeProfile'));
 const Appraisals = lazy(() => import('./pages/Appraisals'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+const Signup = lazy(() => import('./pages/Signup'));
 
-// Fallback skeleton loader while routes load
+// Fallback custom branded skeleton loader while routes load
 const PageLoader = () => (
-  <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+  <div className="flex flex-col h-screen w-full items-center justify-center bg-gray-50 space-y-4">
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut", repeat: Infinity, repeatType: "reverse" }}
+      className="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/30"
+    >
+      <span className="text-3xl font-bold text-white">P</span>
+    </motion.div>
+    <motion.div
+      initial={{ width: 0 }}
+      animate={{ width: 120 }}
+      transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity }}
+      className="h-1 bg-blue-600 rounded-full"
+    />
+    <p className="text-gray-500 font-medium tracking-wide animate-pulse">Loading PerformPro...</p>
   </div>
 );
 
@@ -27,6 +43,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected Enterprise Routes (Require Authentication) */}
