@@ -143,7 +143,7 @@ const Layout = () => {
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
                   className="rounded-full bg-white p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors relative"
                 >
-                {notifications.length > 0 && (
+                {(notifications && notifications.length > 0) && (
                     <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
                 )}
                 <Bell className="h-5 w-5" />
@@ -153,10 +153,10 @@ const Layout = () => {
                     <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden text-left">
                         <div className="bg-slate-50 border-b border-gray-100 px-4 py-3 font-semibold text-gray-700 flex justify-between items-center">
                             Notifications
-                            <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{notifications.length} Unread</span>
+                            <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{notifications?.length || 0} Unread</span>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
-                            {notifications.length === 0 ? (
+                            {(!notifications || notifications.length === 0) ? (
                                 <div className="p-4 text-center text-gray-500 text-sm">No new notifications</div>
                             ) : (
                                 notifications.map(notif => (

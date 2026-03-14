@@ -25,7 +25,7 @@ class UserProfileUpdate(BaseModel):
     bio: Optional[str] = None
     profile_image_url: Optional[str] = None
 
-@router.post("/signup", response_model=UserResponse)
+@router.post("/signup", response_model=dict)
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     # In a real SaaS, this might be restricted to Admin or Manager invitations
     user = db.query(User).filter(User.email == user_in.email).first()
@@ -35,7 +35,6 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="User with this email already exists"
         )
     
-    print(f"DEBUG: Password length is {len(user_in.password)} bytes. Value: {user_in.password!r}")
     hashed_password = get_password_hash(user_in.password)
     new_user = User(
         email=user_in.email,
@@ -45,7 +44,28 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+
+    # Auto-create Employee profile for the new user
+    new_employee = Employee(
+        user_id=new_user.id,
+        email=new_user.email,
+        name=new_user.email.split('@')[0],
+        role=new_user.role.value,
+        status="Active"
+    )
+    db.add(new_employee)
+    db.commit()
+
+    return {
+        "success": True,
+        "data": {
+            "id": new_user.id,
+            "email": new_user.email,
+            "role": new_user.role.value
+        },
+        "message": "User signed up successfully",
+        "pagination": None
+    }
 
 class LoginData(BaseModel):
     email: str
@@ -72,7 +92,8 @@ def login(login_data: LoginData, db: Session = Depends(get_db)):
             "token": access_token,
             "role": user.role.value
         },
-        "message": "Login successful"
+        "message": "Login successful",
+        "pagination": None
     }
 
 @router.post("/google", response_model=dict)
@@ -135,7 +156,8 @@ def google_auth(data: GoogleLoginData, db: Session = Depends(get_db)):
                 "token": access_token,
                 "role": user.role.value
             },
-            "message": "Google login successful"
+            "message": "Google login successful",
+            "pagination": None
         }
 
     except ValueError:
@@ -169,6 +191,7 @@ def read_users_me(current_user: User = Depends(get_current_user), db: Session = 
             "designation": employee.role if employee else ""
         },
         "message": "User profile retrieved",
+        "pagination": None
     }
 
 @router.put("/me", response_model=dict)
@@ -210,5 +233,6 @@ def update_users_me(
             "bio": employee.bio,
             "profile_image_url": employee.profile_image_url
         },
-        "message": "Profile updated successfully"
+        "message": "Profile updated successfully",
+        "pagination": None
     }

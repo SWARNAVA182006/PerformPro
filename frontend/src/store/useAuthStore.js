@@ -11,19 +11,36 @@ const useAuthStore = create(
 
             login: async (email, password) => {
                 const res = await authApi.login(email, password);
+                const currentToken = res.data.token;
+                
+                // Set initial auth state so interceptor works
                 set({
-                    token: res.data.token,
-                    user: { role: res.data.role, ...res.data },
+                    token: currentToken,
                     isAuthenticated: true
+                });
+
+                // Fetch full user profile including employee_id
+                const meRes = await authApi.getMe();
+                
+                set({
+                    user: { ...res.data, ...meRes.data }
                 });
             },
 
             googleLogin: async (credential) => {
                 const res = await authApi.googleLogin(credential);
+                const currentToken = res.data.token;
+                
                 set({
-                    token: res.data.token,
-                    user: { role: res.data.role, ...res.data },
+                    token: currentToken,
                     isAuthenticated: true
+                });
+
+                // Fetch full user profile including employee_id
+                const meRes = await authApi.getMe();
+                
+                set({
+                    user: { ...res.data, ...meRes.data }
                 });
             },
 

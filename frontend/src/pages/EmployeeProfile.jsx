@@ -113,16 +113,16 @@ export default function EmployeeProfile() {
 
             <header className="flex flex-col md:flex-row gap-8 items-start md:items-center">
                 <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl shadow-indigo-500/20">
-                    {employee.name.charAt(0)}
+                    {employee?.name ? employee.name.charAt(0).toUpperCase() : 'E'}
                 </div>
                 <div className="flex-1">
-                    <h2 className="text-4xl font-bold text-white mb-2">{employee.name}</h2>
+                    <h2 className="text-4xl font-bold text-white mb-2">{employee?.name || 'Unknown Employee'}</h2>
                     <div className="flex flex-wrap gap-4 text-slate-400">
                         <span className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full text-sm">
-                            <Target size={14} className="text-indigo-400" /> {employee.role}
+                            <Target size={14} className="text-indigo-400" /> {employee?.role || 'No Role'}
                         </span>
                         <span className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full text-sm">
-                            <TrendingUp size={14} className="text-emerald-400" /> {employee.department}
+                            <TrendingUp size={14} className="text-emerald-400" /> {employee?.department || 'No Department'}
                         </span>
                     </div>
                 </div>

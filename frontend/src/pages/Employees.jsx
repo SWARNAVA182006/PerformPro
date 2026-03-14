@@ -61,11 +61,11 @@ const Employees = () => {
             render: (row) => (
                 <div className="flex items-center space-x-3">
                     <div className="h-8 w-8 rounded-full bg-blue-100 flex justify-center items-center text-blue-700 font-bold text-xs uppercase">
-                        {row.name.charAt(0)}{row.name.split(' ')[1] ? row.name.split(' ')[1].charAt(0) : ''}
+                        {row?.name?.charAt(0) || ''}{row?.name?.split(' ')?.[1] ? row.name.split(' ')[1].charAt(0) : ''}
                     </div>
                     <div>
-                        <div className="font-medium text-gray-900">{row.name}</div>
-                        <div className="text-gray-500 text-xs">{row.email}</div>
+                        <div className="font-medium text-gray-900">{row?.name || 'Unknown'}</div>
+                        <div className="text-gray-500 text-xs">{row?.email || ''}</div>
                     </div>
                 </div>
             )

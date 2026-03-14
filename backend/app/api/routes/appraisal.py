@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.api.dependencies import get_current_user, require_role
 from app.models.user import User, RoleEnum
+from app.models.employee import Employee
+from app.models.appraisal import Appraisal
 from app.schemas.appraisal import SelfAppraisalCreate, ManagerReviewCreate, AppraisalResponse
 from app.services.appraisal_service import appraisal_service
 from app.services.notification_service import notification_service
@@ -82,5 +84,32 @@ def submit_manager_review(
         "success": True,
         "data": AppraisalResponse.from_orm(appraisal).dict(),
         "message": f"Appraisal {appraisal.status.lower()} successfully",
+        "pagination": None
+    }
+
+@router.get("/", response_model=dict)
+def get_appraisals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Admins see all
+    if current_user.role == RoleEnum.ADMIN:
+        appraisals = db.query(Appraisal).order_by(Appraisal.created_at.desc()).all()
+    # Managers see their own and their direct reports
+    elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
+        emp_id = current_user.employee_profile.id
+        appraisals = db.query(Appraisal).join(Employee, Appraisal.employee_id == Employee.id).filter(
+            (Appraisal.employee_id == emp_id) | (Employee.manager_id == emp_id)
+        ).order_by(Appraisal.created_at.desc()).all()
+    # Employees see only their own
+    elif current_user.employee_profile:
+        appraisals = db.query(Appraisal).filter(Appraisal.employee_id == current_user.employee_profile.id).order_by(Appraisal.created_at.desc()).all()
+    else:
+        appraisals = []
+
+    return {
+        "success": True,
+        "data": [AppraisalResponse.from_orm(a).dict() for a in appraisals],
+        "message": "Appraisals retrieved successfully",
         "pagination": None
     }

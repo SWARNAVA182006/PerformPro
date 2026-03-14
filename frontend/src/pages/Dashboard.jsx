@@ -53,10 +53,10 @@ const Dashboard = () => {
           dashboardApi.getActivityFeed()
         ]);
         
-        if (analyticsRes.success) setAnalytics(analyticsRes.data);
-        if (trendsRes.success) setTrends(trendsRes.data);
-        if (deptRes.success) setDepartmentData(deptRes.data);
-        if (activityRes.success) setActivities(activityRes.data);
+        if (analyticsRes?.success) setAnalytics(analyticsRes.data);
+        if (trendsRes?.success) setTrends(trendsRes.data || []);
+        if (deptRes?.success) setDepartmentData(deptRes.data || []);
+        if (activityRes?.success) setActivities(activityRes.data || []);
         
       } catch (error) {
         console.error("Dashboard fetch error:", error);
@@ -224,7 +224,7 @@ const Dashboard = () => {
             Global Activity Feed
           </h3>
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {activities.length === 0 ? (
+            {(!activities || activities.length === 0) ? (
                 <p className="text-gray-500 text-sm text-center mt-4">No recent activity.</p>
             ) : (
                 activities.map((activity, idx) => (

@@ -70,6 +70,7 @@ const Login = () => {
                             placeholder="name@company.com"
                         />
                     </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Password</label>
                         <input
@@ -81,6 +82,7 @@ const Login = () => {
                             placeholder="••••••••"
                         />
                     </div>
+
                     <button
                         type="submit"
                         disabled={loading}
@@ -88,7 +90,7 @@ const Login = () => {
                     >
                         {loading ? 'Authenticating...' : 'Sign in to Enterprise'}
                     </button>
-                    
+
                     <div className="relative mt-6">
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-gray-300"></div>
@@ -97,7 +99,7 @@ const Login = () => {
                             <span className="bg-white px-2 text-gray-500">Or continue with</span>
                         </div>
                     </div>
-                    
+
                     <div className="flex justify-center">
                         <GoogleLogin
                             onSuccess={handleGoogleSuccess}
@@ -106,10 +108,14 @@ const Login = () => {
                             width="100%"
                         />
                     </div>
-                    
+
                     <div className="text-sm text-center text-gray-500 mt-4">
-                        Don't have an account? <Link to="/signup" className="text-indigo-600 font-medium hover:underline">Sign up</Link>
+                        Don't have an account?{" "}
+                        <Link to="/signup" className="text-indigo-600 font-medium hover:underline">
+                            Sign up
+                        </Link>
                     </div>
+
                 </form>
             </div>
         </div>

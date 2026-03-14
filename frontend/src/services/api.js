@@ -71,6 +71,7 @@ export const departmentApi = {
 };
 
 export const appraisalApi = {
+    getAll: () => api.get("/appraisal/"),
     submitSelf: (data) => api.post("/appraisal/self-evaluation", data),
     submitManagerReview: (data) => api.post("/appraisal/manager-review", data),
 };
