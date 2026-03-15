@@ -7,3 +7,4 @@ from app.models.skill import Skill
 from app.models.kpi import KPI
 from app.models.appraisal import Appraisal
 from app.models.audit_log import AuditLog
+from app.models.goal import Goal

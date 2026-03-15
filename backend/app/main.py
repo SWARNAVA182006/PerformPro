@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.api import api_router
+from fastapi import APIRouter
+
+# Import all models to ensure they are registered with SQLAlchemy
+import app.models
 
 # Alembic now manages table creation
 
@@ -27,5 +30,7 @@ app.mount("/files", StaticFiles(directory="app/uploads"), name="files")
 @app.get("/")
 def root():
     return {"message": "PerformPro API is live and modularized!", "docs": "/docs"}
+
+from app.api import api_router
 
 app.include_router(api_router)

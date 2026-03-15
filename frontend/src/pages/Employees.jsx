@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { employeeApi, reportApi } from '../services/api';
 import DataTable from '../components/DataTable';
 import { UserPlus, Download } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Employees = () => {
     const navigate = useNavigate();
@@ -65,19 +66,19 @@ const Employees = () => {
                     </div>
                     <div>
                         <div className="font-medium text-gray-900">{row?.name || 'Unknown'}</div>
-                        <div className="text-gray-500 text-xs">{row?.email || ''}</div>
+                        <div className="text-gray-900 font-medium text-xs">{row?.email || ''}</div>
                     </div>
                 </div>
             )
         },
-        { header: "Designation", accessor: "role", render: (row) => <span className="text-gray-600">{row.role}</span> },
+        { header: "Designation", accessor: "role", render: (row) => <span className="text-gray-900 font-medium">{row?.role}</span> },
         {
             header: "Status",
             accessor: "status",
             render: (row) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row?.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                    {row.status}
+                    {row?.status || 'Active'}
                 </span>
             )
         },
@@ -86,10 +87,10 @@ const Employees = () => {
             accessor: "performance_score",
             render: (row) => (
                 <div className="flex items-center">
-                    <div className="w-full bg-gray-200 rounded-full h-2 mr-2 max-w-[4rem]">
-                        <div className={`h-2 rounded-full ${row.performance_score > 80 ? 'bg-green-500' : row.performance_score > 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${Math.min(100, row.performance_score)}%` }}></div>
+                    <div className="w-full bg-gray-300 rounded-full h-2 mr-2 max-w-[4rem]">
+                        <div className={`h-2 rounded-full ${row?.performance_score > 80 ? 'bg-green-500' : row?.performance_score > 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${Math.min(100, row?.performance_score || 0)}%` }}></div>
                     </div>
-                    <span className="text-xs font-medium text-gray-600">{row.performance_score}%</span>
+                    <span className="text-xs font-bold text-gray-900">{row?.performance_score || 0}%</span>
                 </div>
             )
         },
@@ -98,7 +99,7 @@ const Employees = () => {
             accessor: "actions",
             render: (row) => (
                 <button
-                    onClick={() => navigate(`/employees/${row.id}`)}
+                    onClick={() => navigate(`/employees/${row?.id}`)}
                     className="text-blue-600 hover:text-blue-900 font-medium text-sm transition-colors"
                 >
                     View Profile
@@ -108,18 +109,22 @@ const Employees = () => {
     ];
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-7xl mx-auto space-y-6"
+        >
             <div className="sm:flex sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Enterprise Directory</h1>
-                    <p className="mt-1 text-sm text-gray-500">Manage your workforce, view profiles, and monitor company-wide statuses.</p>
+                    <p className="mt-1 text-sm text-gray-900 font-medium">Manage your workforce, view profiles, and monitor company-wide statuses.</p>
                 </div>
                 <div className="mt-4 flex sm:mt-0 sm:ml-4 space-x-3">
-                    <button onClick={handleDownloadCSV} className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                        <Download className="-ml-1 mr-2 h-4 w-4 text-gray-500" />
+                    <button onClick={handleDownloadCSV} className="inline-flex items-center justify-center rounded-md border border-gray-400 bg-white px-4 py-2 text-sm font-bold text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                        <Download className="-ml-1 mr-2 h-4 w-4 text-gray-900" />
                         Export CSV
                     </button>
-                    <button className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    <button className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-gray-900 shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                         <UserPlus className="-ml-1 mr-2 h-4 w-4" />
                         Add Employee
                     </button>
@@ -128,14 +133,14 @@ const Employees = () => {
 
             <DataTable
                 columns={columns}
-                data={employees}
+                data={employees || []}
                 loading={loading}
                 pagination={pagination}
                 onPageChange={handlePageChange}
                 onSearch={setSearchQuery}
                 searchPlaceholder="Search employees by name or email..."
             />
-        </div>
+        </motion.div>
     );
 };
 

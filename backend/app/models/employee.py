@@ -25,9 +25,9 @@ class Employee(Base):
     # Relationships
     user = relationship("User", back_populates="employee_profile")
     department = relationship("Department", back_populates="employees")
-    manager = relationship("Employee", remote_side=[id], backref="direct_reports")
+    manager = relationship("Employee", remote_side=[id], backref="direct_reports", foreign_keys=[manager_id])
     
     feedbacks = relationship("Feedback", back_populates="employee", cascade="all, delete-orphan")
     skills = relationship("Skill", back_populates="employee", cascade="all, delete-orphan")
-    appraisals = relationship("Appraisal", back_populates="employee", cascade="all, delete-orphan")
+    appraisals = relationship("Appraisal", back_populates="employee", cascade="all, delete-orphan", foreign_keys="[Appraisal.employee_id]")
     kpis = relationship("KPI", back_populates="employee", cascade="all, delete-orphan")

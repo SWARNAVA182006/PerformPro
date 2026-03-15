@@ -10,41 +10,40 @@ const useAuthStore = create(
             isAuthenticated: false,
 
             login: async (email, password) => {
-                const res = await authApi.login(email, password);
-                const currentToken = res.data.token;
+                const res = await authApi.login({ email, password });
+                const { token } = res.data;
                 
-                // Set initial auth state so interceptor works
-                set({
-                    token: currentToken,
-                    isAuthenticated: true
-                });
-
-                // Fetch full user profile including employee_id
-                const meRes = await authApi.getMe();
+                set({ token, isAuthenticated: true });
                 
-                set({
-                    user: { ...res.data, ...meRes.data }
-                });
+                // Fetch full profile immediately
+                const profileRes = await authApi.getMe();
+                set({ user: profileRes.data });
             },
 
             googleLogin: async (credential) => {
                 const res = await authApi.googleLogin(credential);
-                const currentToken = res.data.token;
+                const { token } = res.data;
                 
-                set({
-                    token: currentToken,
-                    isAuthenticated: true
-                });
-
-                // Fetch full user profile including employee_id
-                const meRes = await authApi.getMe();
+                set({ token, isAuthenticated: true });
                 
-                set({
-                    user: { ...res.data, ...meRes.data }
-                });
+                // Fetch full profile
+                const profileRes = await authApi.getMe();
+                set({ user: profileRes.data });
             },
 
-            logout: () => set({ token: null, user: null, isAuthenticated: false }),
+            // Fetch full profile manually (useful after profile updates)
+            fetchProfile: async () => {
+                const profileRes = await authApi.getMe();
+                set({ user: profileRes.data });
+            },
+
+            // Action to manually set auth (useful for signup or SSR)
+            setAuth: (token, user) => set({ token, user, isAuthenticated: !!token }),
+
+            logout: () => {
+                set({ token: null, user: null, isAuthenticated: false });
+                localStorage.removeItem('performpro-auth');
+            },
 
             hasRole: (allowedRoles) => {
                 const { user, isAuthenticated } = get();

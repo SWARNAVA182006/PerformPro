@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import { motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts component to hold Sidebar/Topbar
 import Layout from './components/Layout';
@@ -14,6 +15,9 @@ const EmployeeProfile = lazy(() => import('./pages/EmployeeProfile'));
 const Appraisals = lazy(() => import('./pages/Appraisals'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const Signup = lazy(() => import('./pages/Signup'));
+const Goals = lazy(() => import('./pages/Goals'));
+const Reports = lazy(() => import('./pages/Reports'));
+const SystemLogs = lazy(() => import('./pages/SystemLogs'));
 
 // Fallback custom branded skeleton loader while routes load
 const PageLoader = () => (
@@ -39,6 +43,7 @@ const PageLoader = () => (
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
@@ -52,12 +57,13 @@ function App() {
               {/* Redirect root to dashboard */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-              {/* All Roles View Dashboard (Layout adapts) */}
+              {/* All Roles */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<EmployeeProfile />} />
-
-              {/* Appraisals (Employee self eval, Manager review) */}
               <Route path="/appraisals" element={<Appraisals />} />
+              <Route path="/appraisals/:id" element={<Appraisals />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/reports" element={<Reports />} />
             </Route>
           </Route>
 
@@ -66,6 +72,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/employees" element={<Employees />} />
               <Route path="/employees/:id" element={<EmployeeProfile />} />
+              <Route path="/logs" element={<SystemLogs />} />
             </Route>
           </Route>
 

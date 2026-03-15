@@ -120,6 +120,47 @@ def get_employees(
         }
     }
 
+@router.get("/me", response_model=dict)
+def get_my_employee_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.employee_profile:
+        raise HTTPException(status_code=400, detail="Employee profile not found for this user")
+        
+    return {
+        "success": True,
+        "data": EmployeeResponseData.from_orm(current_user.employee_profile).dict(),
+        "message": "My profile retrieved successfully"
+    }
+
+@router.put("/me", response_model=dict)
+def update_my_employee_profile(
+    emp_update: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    emp = current_user.employee_profile
+    if not emp:
+        raise HTTPException(status_code=400, detail="Employee profile not found")
+        
+    # Security: users can update name, phone, bio, image, but not their own department/manager/status
+    update_data = emp_update.dict(exclude_unset=True)
+    allowed_fields = {'name', 'phone', 'bio', 'profile_image_url', 'department_id', 'role'}
+    
+    for key, value in update_data.items():
+        if key in allowed_fields:
+            setattr(emp, key, value)
+            
+    db.commit()
+    db.refresh(emp)
+    
+    return {
+        "success": True,
+        "data": EmployeeResponseData.from_orm(emp).dict(),
+        "message": "Profile updated successfully"
+    }
+
 @router.get("/{emp_id}", response_model=dict)
 def get_employee(
     emp_id: int, 

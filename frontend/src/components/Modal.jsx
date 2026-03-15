@@ -17,13 +17,13 @@ export default function Modal({ isOpen, onClose, title, children }) {
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden"
+                        className="bg-[#1e293b] border border-gray-200 rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden"
                     >
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
-                            <h3 className="text-xl font-bold text-white">{title}</h3>
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                            <h3 className="text-xl font-bold text-gray-900">{title}</h3>
                             <button
                                 onClick={onClose}
-                                className="text-slate-400 hover:text-white transition-colors"
+                                className="text-gray-600 hover:text-gray-900 transition-colors"
                             >
                                 <X size={24} />
                             </button>

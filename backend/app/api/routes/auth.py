@@ -24,6 +24,8 @@ class UserProfileUpdate(BaseModel):
     phone: Optional[str] = None
     bio: Optional[str] = None
     profile_image_url: Optional[str] = None
+    department_id: Optional[int] = None
+    designation: Optional[str] = None
 
 @router.post("/signup", response_model=dict)
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
@@ -220,6 +222,10 @@ def update_users_me(
         employee.bio = profile_data.bio
     if profile_data.profile_image_url is not None:
         employee.profile_image_url = profile_data.profile_image_url
+    if profile_data.department_id is not None:
+        employee.department_id = profile_data.department_id
+    if profile_data.designation is not None:
+        employee.role = profile_data.designation
         
     db.commit()
     db.refresh(employee)

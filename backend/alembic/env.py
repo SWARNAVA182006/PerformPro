@@ -50,7 +50,7 @@ def run_migrations_offline() -> None:
     """
     url = config.get_main_option("sqlalchemy.url")
     import os
-    db_url = os.getenv("DATABASE_URL", "sqlite:///./data/performpro.db")
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./performpro.db")
     context.configure(
         url=db_url,
         target_metadata=target_metadata,
@@ -71,7 +71,7 @@ def run_migrations_online() -> None:
 
     """
     import os
-    db_url = os.getenv("DATABASE_URL", "sqlite:///./data/performpro.db")
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./performpro.db")
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = db_url
 

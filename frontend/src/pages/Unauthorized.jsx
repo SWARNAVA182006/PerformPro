@@ -12,7 +12,7 @@ const Unauthorized = () => {
                 You do not have the necessary enterprise permissions to access this page. Please contact your system administrator.
             </p>
             <div className="flex space-x-4">
-                <Link to="/dashboard" className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                <Link to="/dashboard" className="px-6 py-2 bg-blue-600 text-gray-900 rounded-md hover:bg-blue-700 transition">
                     Return to Dashboard
                 </Link>
                 <button onClick={logout} className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition text-gray-700">

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
 import { GoogleLogin } from '@react-oauth/google';
 import useAuthStore from '../store/useAuthStore';
+import { motion } from 'framer-motion';
 
 const Signup = () => {
 
@@ -46,45 +47,41 @@ const Signup = () => {
     };
 
     const handleGoogleSuccess = async (credentialResponse) => {
-
         setLoading(true);
         setError(null);
-
         try {
-
-            const res = await authApi.googleLogin(credentialResponse.credential);
-
-            if (res.success) {
-
-                loginAction(res.data.token, {
-                    id: res.data.id,
-                    email: res.data.email,
-                    role: res.data.role
-                });
-
-                navigate('/dashboard');
-
-            }
-
+            // Simply use the store action which handles both API call and state update
+            await useAuthStore.getState().googleLogin(credentialResponse.credential);
+            navigate('/dashboard');
         } catch (err) {
-
-            setError(err.detail || 'Google Signup failed. Please try again.');
-
+            console.error("Google Auth Error:", err);
+            setError(err.detail || err.message || 'Google Signup failed. Please try again.');
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
-    return (
-        <div className="flex h-screen items-center justify-center bg-gray-50">
-            <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-xl border border-gray-100">
 
-                <div className="mb-8 text-center">
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl border border-gray-100"
+            >
+
+                <div className="mb-8 text-center flex flex-col items-center">
+                    <motion.img 
+                        src="/logo.jpeg" 
+                        alt="PerformPro Logo" 
+                        className="h-16 w-auto rounded-xl shadow-md mb-4"
+                        initial={{ scale: 0.8, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.5, type: 'spring' }}
+                    />
                     <h1 className="text-3xl font-bold text-blue-700">PerformPro</h1>
-                    <p className="mt-2 text-gray-500 text-sm">Create your Enterprise Account</p>
+                    <p className="mt-2 text-gray-900 font-medium text-sm">Create your Enterprise Account</p>
                 </div>
 
                 {error && (
@@ -140,7 +137,7 @@ const Signup = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2.5 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                        className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2.5 px-4 text-sm font-medium text-gray-900 shadow-sm hover:bg-indigo-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
                     >
                         {loading ? 'Creating Account...' : 'Sign Up'}
                     </button>
@@ -152,7 +149,7 @@ const Signup = () => {
                         </div>
 
                         <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                            <span className="bg-white px-2 text-gray-900 font-medium">Or continue with</span>
                         </div>
 
                     </div>
@@ -168,16 +165,16 @@ const Signup = () => {
 
                     </div>
 
-                    <div className="text-sm text-center text-gray-500 mt-4">
+                    <div className="text-sm text-center text-gray-900 mt-4">
                         Already have an account?{" "}
-                        <Link to="/login" className="text-indigo-600 font-medium hover:underline">
+                        <Link to="/login" className="text-indigo-600 font-bold hover:underline">
                             Log in
                         </Link>
                     </div>
 
                 </form>
 
-            </div>
+            </motion.div>
         </div>
     );
 };

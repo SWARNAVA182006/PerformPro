@@ -29,6 +29,6 @@ def add_skill(skill: SkillCreate, db: Session = Depends(get_db)):
     db.refresh(db_skill)
     return db_skill
 
-@router.get("/{employee_id}", response_model=List[Skill])
+@router.get("/", response_model=List[Skill])
 def get_skills(employee_id: int, db: Session = Depends(get_db)):
     return db.query(SkillModel).filter(SkillModel.employee_id == employee_id).all()
