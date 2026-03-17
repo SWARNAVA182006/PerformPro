@@ -4,6 +4,12 @@ sqlalchemy
 passlib[bcrypt]
 pyjwt
 python-jose
+fastapi
+uvicorn
+sqlalchemy
+passlib[bcrypt]
+pyjwt
+python-jose
 email-validator
 google-auth
 google-auth-oauthlib
@@ -12,3 +18,4 @@ pydantic-settings
 python-dotenv
 psycopg2-binary
 gunicorn
+pandas
