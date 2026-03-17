@@ -5,8 +5,10 @@ from fastapi import APIRouter
 
 # Import all models to ensure they are registered with SQLAlchemy
 import app.models
+from app.database import engine
 
-# Alembic now manages table creation
+# Automatically create tables (crucial for first-time cloud DB deployments)
+app.models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PerformPro – Smart Employee Performance Tracker",
