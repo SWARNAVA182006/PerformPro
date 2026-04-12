@@ -2,11 +2,93 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import { appraisalApi } from '../services/api';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import DataTable from '../components/DataTable';
+import { CheckCircle2, AlertCircle, Clock, Star, FileText, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonDashboard } from '../components/SkeletonLoader';
 import { toast } from 'react-hot-toast';
+import { format } from 'date-fns';
+
+const STATUS_CONFIG = {
+    'Pending Manager': { color: '#fbbf24', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)', label: 'Pending Manager Review' },
+    'Pending Admin':   { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  border: 'rgba(6,182,212,0.25)',  label: 'Pending Admin Approval' },
+    'Approved':        { color: '#34d399', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)', label: 'Approved' },
+    'Rejected':        { color: '#f87171', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.25)',  label: 'Rejected' },
+};
+
+const AppraisalRow = ({ appraisal, canAction, onApprove, onReject, userRole }) => {
+    const cfg = STATUS_CONFIG[appraisal.status] || STATUS_CONFIG['Pending Manager'];
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{
+                display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
+                padding: '1rem 1.25rem', borderRadius: '1rem',
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        >
+            <div style={{ width: 36, height: 36, borderRadius: '0.75rem', background: cfg.bg, border: `1px solid ${cfg.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <FileText size={16} style={{ color: cfg.color }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e2e8f0' }}>Employee #{appraisal.employee_id}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#475569' }}>·</span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{appraisal.review_period}</span>
+                </div>
+                {appraisal.comments && (
+                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.775rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                        {appraisal.comments}
+                    </p>
+                )}
+            </div>
+            {appraisal.rating && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#fbbf24', flexShrink: 0 }}>
+                    <Star size={13} fill="#fbbf24" />
+                    <span style={{ fontWeight: 700, fontSize: '0.8rem' }}>{appraisal.rating}/10</span>
+                </div>
+            )}
+            <span style={{
+                padding: '0.2rem 0.65rem', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.05em',
+                background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, flexShrink: 0, whiteSpace: 'nowrap'
+            }}>
+                {cfg.label}
+            </span>
+            {appraisal.created_at && (
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Clock size={11} /> {format(new Date(appraisal.created_at), 'MMM dd')}
+                </span>
+            )}
+            {canAction && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                    <motion.button whileTap={{ scale: 0.95 }}
+                        onClick={() => onApprove(appraisal.id)}
+                        style={{
+                            padding: '0.35rem 0.875rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer',
+                            background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)',
+                            display: 'flex', alignItems: 'center', gap: '0.3rem'
+                        }}
+                    >
+                        <CheckCircle2 size={12} /> {userRole === 'Manager' ? 'Forward' : 'Approve'}
+                    </motion.button>
+                    <motion.button whileTap={{ scale: 0.95 }}
+                        onClick={() => onReject(appraisal.id)}
+                        style={{
+                            padding: '0.35rem 0.875rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer',
+                            background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.22)',
+                            display: 'flex', alignItems: 'center', gap: '0.3rem'
+                        }}
+                    >
+                        Reject
+                    </motion.button>
+                </div>
+            )}
+        </motion.div>
+    );
+};
 
 const Appraisals = () => {
     const { id } = useParams();
@@ -14,79 +96,56 @@ const Appraisals = () => {
     const [appraisals, setAppraisals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    
-    // Form state
     const [rating, setRating] = useState(5);
     const [comments, setComments] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [msg, setMsg] = useState({ text: '', type: '' });
     
+    const isManagerOrAdmin = hasRole(['Manager', 'Admin']);
     const isReviewingOther = useMemo(() => id && id !== String(user?.employee_id), [id, user]);
 
     const fetchAppraisals = async () => {
         setLoading(true);
         try {
-            const res = hasRole(['Manager', 'Admin']) 
-                ? await appraisalApi.getAll() 
-                : await appraisalApi.getMy();
-            if (res?.success) {
-                setAppraisals(res.data || []);
-            }
+            const res = isManagerOrAdmin ? await appraisalApi.getAll() : await appraisalApi.getMy();
+            if (res?.success) setAppraisals(res.data || []);
         } catch (error) {
-            console.error("Appraisal fetch error:", error);
+            console.error("Fetch error:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchAppraisals();
-    }, []);
+    useEffect(() => { fetchAppraisals(); }, []);
 
     const handleSubmitForm = async (e) => {
         e.preventDefault();
         setSubmitting(true);
-        setMsg({ text: '', type: '' });
         try {
             const targetEmployeeId = isReviewingOther ? parseInt(id) : (user?.employee_id || user?.id);
-            
-            const payload = isReviewingOther ? {
-                employee_id: targetEmployeeId,
-                manager_remarks: comments,
-                review_period: 'Q1-2026' // Default period or make dynamic
-            } : {
-                employee_id: targetEmployeeId,
-                self_rating: Number(rating),
-                self_comments: comments
-            };
+            const payload = isReviewingOther
+                ? { employee_id: targetEmployeeId, manager_remarks: comments, review_period: 'Q2-2026' }
+                : { employee_id: targetEmployeeId, self_rating: Number(rating), self_comments: comments };
 
             const res = await appraisalApi.submit(payload);
             if (res?.success) {
-                toast.success(isReviewingOther ? 'Review submitted!' : 'Self-appraisal submitted!');
+                toast.success(isReviewingOther ? 'Review submitted!' : 'Self-appraisal submitted! Awaiting manager review.');
                 setComments('');
                 setRating(5);
                 fetchAppraisals();
             }
         } catch (error) {
-            toast.error(error.response?.data?.detail || error.message || 'Failed to submit');
+            toast.error(error.response?.data?.detail || 'Failed to submit');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleManagerAction = async (appraisalId, approved) => {
+    const handleApprove = async (appraisalId) => {
         try {
-            const payload = {
-                manager_rating: 8.0, 
-                manager_comments: 'Reviewed and approved'
-            };
-            const res = approved 
-                ? await appraisalApi.approve(appraisalId, payload)
-                : await appraisalApi.reject(appraisalId, payload);
-                
+            const res = await appraisalApi.approve(appraisalId, { manager_rating: 8.0, manager_comments: 'Reviewed and progressed' });
             if (res?.success) {
-                const action = user.role === 'Manager' ? 'reviewed' : 'approved';
-                toast.success(`Appraisal ${approved ? action : 'rejected'} successfully`);
+                const action = user.role === 'Manager' ? 'forwarded for admin review' : 'fully approved';
+                toast.success(`Appraisal ${action} successfully`);
                 fetchAppraisals();
             }
         } catch (error) {
@@ -94,160 +153,210 @@ const Appraisals = () => {
         }
     };
 
+    const handleReject = async (appraisalId) => {
+        try {
+            const res = await appraisalApi.reject(appraisalId, { manager_rating: 3.0, manager_comments: 'Requires revision' });
+            if (res?.success) {
+                toast.success('Appraisal rejected');
+                fetchAppraisals();
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to reject');
+        }
+    };
+
     const filteredAppraisals = useMemo(() => {
         if (!searchQuery.trim()) return appraisals;
         const q = searchQuery.toLowerCase();
-        return appraisals.filter(app => {
-            const commentsMatch = app.comments?.toLowerCase().includes(q);
-            const statusMatch = app.status?.toLowerCase().includes(q);
-            const idMatch = String(app.employee_id).includes(q);
-            return commentsMatch || statusMatch || idMatch;
-        });
+        return appraisals.filter(a =>
+            a.comments?.toLowerCase().includes(q) ||
+            a.status?.toLowerCase().includes(q) ||
+            String(a.employee_id).includes(q) ||
+            a.review_period?.toLowerCase().includes(q)
+        );
     }, [appraisals, searchQuery]);
 
-    const columns = [
-        { header: "Date", accessor: "date", render: (row) => new Date(row.date).toLocaleDateString() },
-        { header: "Employee ID", accessor: "employee_id", render: (row) => <span className="text-gray-500">#{row.employee_id}</span> },
-        { header: "Rating", accessor: "rating", render: (row) => <span className="font-bold text-gray-700">{row.rating ? `${row.rating}/10` : 'N/A'}</span> },
-        { header: "Status", accessor: "status", render: (row) => (
-            <span className={`px-2 py-1 rounded text-xs font-medium ${row.status === 'Approved' ? 'bg-green-100 text-green-800' : row.status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                {row.status || 'Pending'}
-            </span>
-        )},
-        { header: "Details", accessor: "comments", render: (row) => <div className="max-w-xs truncate text-xs text-gray-500" title={row.comments}>{row.comments}</div> }
-    ];
+    // Separate into buckets for approval workflow
+    const pendingManagerAppraisals = filteredAppraisals.filter(a => a.status === 'Pending Manager');
+    const pendingAdminAppraisals = filteredAppraisals.filter(a => a.status === 'Pending Admin');
+    const processedAppraisals = filteredAppraisals.filter(a => ['Approved', 'Rejected'].includes(a.status));
 
-    if (hasRole(['Manager', 'Admin'])) {
-        columns.push({
-            header: "Actions",
-            accessor: "actions",
-            render: (row) => {
-                const canManagerApprove = user.role === 'Manager' && row.status === 'Pending Manager';
-                const canAdminApprove = user.role === 'Admin' && row.status === 'Pending Admin';
-                const isOwn = row.employee_id === user?.employee_id;
-
-                if ((canManagerApprove || canAdminApprove) && !isOwn) {
-                    return (
-                        <div className="flex space-x-2">
-                            <button onClick={() => handleManagerAction(row.id, true)} className="text-xs bg-green-500 hover:bg-green-600 text-gray-900 px-3 py-1.5 rounded shadow-sm transition">
-                                {user.role === 'Manager' ? 'Review' : 'Finalize'}
-                            </button>
-                            <button onClick={() => handleManagerAction(row.id, false)} className="text-xs bg-red-500 hover:bg-red-600 text-gray-900 px-3 py-1.5 rounded shadow-sm transition">Reject</button>
-                        </div>
-                    );
-                }
-                return <span className="text-xs text-gray-400">Locked</span>;
-            }
-        });
-    }
+    const canManagerAction = (a) => user?.role === 'Manager' && a.status === 'Pending Manager' && a.employee_id !== user?.employee_id;
+    const canAdminAction = (a) => user?.role === 'Admin' && a.status === 'Pending Admin';
 
     if (loading) return <SkeletonDashboard />;
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="max-w-6xl mx-auto space-y-8"
-        >
-            <div className="border-b border-gray-100 pb-5">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Performance Appraisals</h1>
-                <p className="mt-1 text-sm text-gray-500">Manage your self-evaluations and team reviews here.</p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Header */}
+            <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1.5rem' }}>
+                <h1 style={{ margin: 0, fontSize: '1.625rem', fontWeight: 800, color: '#e2e8f0' }}>Performance Appraisals</h1>
+                <p style={{ margin: '0.35rem 0 0', fontSize: '0.875rem', color: '#94a3b8' }}>
+                    {isManagerOrAdmin ? 'Review self-evaluations and manage the approval workflow.' : 'Submit your self-evaluation and track your review status.'}
+                </p>
             </div>
 
-            {msg?.text && (
-                <div className={`p-4 rounded-md flex items-center shadow-sm ${msg?.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-                    {msg?.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" /> : <AlertCircle className="w-5 h-5 mr-3 text-red-500" />}
-                    {msg?.text}
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Form Section */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden sticky top-8">
-                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-lg font-medium text-gray-900">
-                                {isReviewingOther ? `Reviewing Employee #${id}` : 'Self Evaluation Form'}
-                            </h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                                {isReviewingOther 
-                                    ? "Provide professional feedback and remarks for this employee." 
-                                    : "Submit your self-assessment for the current cycle."}
-                            </p>
-                        </div>
-                        <form onSubmit={handleSubmitForm} className="p-6 space-y-6">
-                            {!isReviewingOther && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Overall Rating (1-10)</label>
-                                    <div className="flex items-center space-x-4">
-                                        <input
-                                            type="range"
-                                            min="1"
-                                            max="10"
-                                            step="0.5"
-                                            value={rating}
-                                            onChange={(e) => setRating(e.target.value)}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                        />
-                                        <span className="inline-block w-12 text-center py-1 px-2 rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-100">
-                                            {rating}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {isReviewingOther ? 'Manager Remarks' : 'Key Achievements & Details'}
-                                </label>
-                                <textarea
-                                    required
-                                    rows={4}
-                                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-3 border"
-                                    placeholder={isReviewingOther ? "Enter manager review remarks..." : "Detail your accomplishments..."}
-                                    value={comments}
-                                    onChange={(e) => setComments(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex justify-end pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-900 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition disabled:opacity-50 w-full"
-                                >
-                                    {submitting ? 'Submitting...' : (isReviewingOther ? 'Submit Manager Review' : 'Submit Evaluation')}
-                                </button>
-                            </div>
-                        </form>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }} className="grid-cols-1 lg:grid-cols-3">
+                {/* ===== SUBMISSION FORM ===== */}
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1.25rem', overflow: 'hidden',
+                    alignSelf: 'start', position: 'sticky', top: '1.5rem'
+                }}>
+                    <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(99,102,241,0.05)' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>
+                            {isReviewingOther ? `Manager Review: #${id}` : 'Self Evaluation'}
+                        </h3>
+                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+                            {isReviewingOther ? 'Provide professional feedback for this employee.' : 'Submit your self-assessment for the current cycle.'}
+                        </p>
                     </div>
-                </div>
-
-                {/* Data Table Section */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
-                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <form onSubmit={handleSubmitForm} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        {!isReviewingOther && (
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900">Appraisals Timeline</h3>
-                                <p className="mt-1 text-sm text-gray-500">{hasRole(['Manager', 'Admin']) ? "Overview of team performance reviews and approvals." : "Your history of submitted performance evaluations."}</p>
+                                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', marginBottom: '0.75rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                                    Self Rating: <span style={{ color: '#a5b4fc', fontWeight: 800 }}>{rating}/10</span>
+                                </label>
+                                <div style={{ padding: '0 0.25rem' }}>
+                                    <input
+                                        type="range" min="1" max="10" step="0.5"
+                                        value={rating}
+                                        onChange={e => setRating(e.target.value)}
+                                        style={{ width: '100%', accentColor: '#6366f1' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem' }}>
+                                    {[0,2,4,6,8,10].map(v => <span key={v} style={{ fontSize: '0.65rem', color: '#334155' }}>{v || 1}</span>)}
+                                </div>
                             </div>
-                            <div className="w-1/3">
-                                <input
-                                    type="text"
-                                    placeholder="Search by ID, Status, Comments..."
-                                    className="w-full text-sm border-gray-300 rounded-md p-2 border shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                        <div className="p-0">
-                            <DataTable 
-                                columns={columns} 
-                                data={filteredAppraisals || []} 
-                                loading={false} 
-                                emptyMessage="No appraisals found in the system yet."
+                        )}
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', marginBottom: '0.5rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                                {isReviewingOther ? 'Manager Remarks' : 'Key Achievements'}
+                            </label>
+                            <textarea
+                                required rows={5}
+                                placeholder={isReviewingOther ? 'Enter professional feedback...' : 'Describe your accomplishments this period...'}
+                                value={comments}
+                                onChange={e => setComments(e.target.value)}
+                                style={{
+                                    width: '100%', padding: '0.75rem', borderRadius: '0.75rem',
+                                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                    color: '#e2e8f0', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none',
+                                    resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6, transition: 'all 0.2s'
+                                }}
+                                onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'; }}
+                                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
                             />
                         </div>
+
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                            type="submit" disabled={submitting}
+                            style={{
+                                width: '100%', padding: '0.75rem', borderRadius: '0.875rem', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+                                background: submitting ? 'rgba(99,102,241,0.3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                color: 'white', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                                boxShadow: submitting ? 'none' : '0 4px 16px rgba(99,102,241,0.3)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {submitting ? 'Submitting...' : (isReviewingOther ? 'Submit Manager Review' : 'Submit Evaluation')}
+                        </motion.button>
+                    </form>
+                </div>
+
+                {/* ===== APPRAISALS LIST ===== */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                    {/* Search */}
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="text"
+                            placeholder="Search by employee ID, status, period..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%', padding: '0.7rem 1rem', borderRadius: '0.875rem', boxSizing: 'border-box',
+                                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                color: '#e2e8f0', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s'
+                            }}
+                            onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.4)'; }}
+                            onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                        />
                     </div>
+
+                    {/* Pending Manager Review */}
+                    {pendingManagerAppraisals.length > 0 && (
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                <AlertCircle size={15} style={{ color: '#fbbf24' }} />
+                                <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fbbf24' }}>
+                                    Awaiting Manager Review ({pendingManagerAppraisals.length})
+                                </span>
+                                <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.15)' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {pendingManagerAppraisals.map(a => (
+                                    <AppraisalRow key={a.id} appraisal={a}
+                                        canAction={canManagerAction(a)} userRole={user?.role}
+                                        onApprove={handleApprove} onReject={handleReject}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pending Admin */}
+                    {pendingAdminAppraisals.length > 0 && (
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                <ChevronRight size={15} style={{ color: '#67e8f9' }} />
+                                <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#67e8f9' }}>
+                                    Awaiting Admin Approval ({pendingAdminAppraisals.length})
+                                </span>
+                                <div style={{ flex: 1, height: 1, background: 'rgba(6,182,212,0.12)' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {pendingAdminAppraisals.map(a => (
+                                    <AppraisalRow key={a.id} appraisal={a}
+                                        canAction={canAdminAction(a)} userRole={user?.role}
+                                        onApprove={handleApprove} onReject={handleReject}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Processed */}
+                    {processedAppraisals.length > 0 && (
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                <CheckCircle2 size={15} style={{ color: '#34d399' }} />
+                                <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#94a3b8' }}>
+                                    Processed ({processedAppraisals.length})
+                                </span>
+                                <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {processedAppraisals.map(a => (
+                                    <AppraisalRow key={a.id} appraisal={a}
+                                        canAction={false} userRole={user?.role}
+                                        onApprove={handleApprove} onReject={handleReject}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {filteredAppraisals.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '3rem 1.5rem', border: '2px dashed rgba(255,255,255,0.06)', borderRadius: '1.25rem' }}>
+                            <FileText style={{ color: '#334155', margin: '0 auto 1rem' }} size={40} />
+                            <p style={{ color: '#475569', fontSize: '0.875rem', margin: 0 }}>
+                                {searchQuery ? `No appraisals matching "${searchQuery}"` : 'No appraisals found yet.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </motion.div>

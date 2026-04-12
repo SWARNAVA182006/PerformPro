@@ -108,8 +108,9 @@ export const goalApi = {
     getMy: () => api.get("/goals/my"),
     create: (data) => api.post("/goals/", data),
     update: (id, data) => api.put(`/goals/${id}`, data),
-    approve: (id) => api.put(`/goals/${id}/approve`),
-    complete: (id) => api.put(`/goals/${id}/complete`),
+    approve: (id) => api.put(`/goals/${id}/approve`, {}),
+    deny: (id) => api.put(`/goals/${id}/deny`, {}),
+    complete: (id) => api.put(`/goals/${id}/complete`, {}),
     delete: (id) => api.delete(`/goals/${id}`)
 };
 

@@ -44,14 +44,18 @@ def submit_appraisal(
         )
         msg = "Performance appraisal submitted by manager."
     else:
-        # Self-appraisal flow
+        # Self-appraisal flow — default to Pending Manager for approval
         appraisal = appraisal_service.submit_appraisal(
             db=db,
             employee_id=eval_data["employee_id"],
             self_rating=eval_data.get("self_rating", 5.0),
             self_comments=eval_data.get("self_comments", "")
         )
-        msg = "Self appraisal submitted."
+        # Enforce Pending Manager status on new self-appraisals
+        appraisal.status = "Pending Manager"
+        db.commit()
+        db.refresh(appraisal)
+        msg = "Self appraisal submitted and is pending manager review."
     
     # Notify Manager
     emp = db.query(Employee).filter(Employee.id == appraisal.employee_id).first()
@@ -62,7 +66,7 @@ def submit_appraisal(
                 db, 
                 user_id=mgr.user_id, 
                 title="Appraisal Submitted", 
-                message=f"{emp.name} submitted a new self-appraisal."
+                message=f"{emp.name} submitted a new self-appraisal awaiting your review."
             )
 
     # Audit Log
@@ -113,9 +117,12 @@ def approve_appraisal(
     if not appraisal:
         raise HTTPException(status_code=404, detail="Appraisal not found")
 
+    # Manager moves to Pending Admin; Admin finalizes as Approved
     target_status = "Approved"
     if current_user.role == RoleEnum.MANAGER:
         target_status = "Pending Admin"
+    
+    manager_emp_id = current_user.employee_profile.id if current_user.employee_profile else None
     
     appraisal = appraisal_service.review_appraisal(
         db=db,
@@ -142,7 +149,7 @@ def approve_appraisal(
                 db, 
                 user_id=admin.id, 
                 title="Appraisal Review Complete", 
-                message=f"Manager has reviewed appraisal for ID #{appraisal.employee_id}. Awaiting final admin approval."
+                message=f"Manager has reviewed appraisal for employee #{appraisal.employee_id}. Awaiting final admin approval."
             )
     else: # Approved
         emp_user = db.query(User).join(Employee, Employee.user_id == User.id).filter(Employee.id == appraisal.employee_id).first()
@@ -176,8 +183,21 @@ def reject_appraisal(
         manager_comments=review_data.manager_comments,
         approved=False
     )
+    
+    # Notify employee of rejection
+    emp_user = db.query(User).join(Employee, Employee.user_id == User.id).filter(Employee.id == appraisal.employee_id).first()
+    if emp_user:
+        notification_service.create_notification(
+            db,
+            user_id=emp_user.id,
+            title="Appraisal Rejected",
+            message="Your performance appraisal has been reviewed and requires revision."
+        )
+
+    # Audit Log
+    audit_service.log_action(db, current_user.id, "rejected", "Appraisal", appraisal.id, {"status": appraisal.status})
+
     # Trigger KPI update
     performance_service.calculate_kpi(db, appraisal.employee_id)
-
     
     return {"success": True, "data": AppraisalResponse.from_orm(appraisal).dict()}

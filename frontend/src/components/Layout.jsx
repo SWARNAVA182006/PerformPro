@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
-import { LayoutDashboard, Users, FileText, Bell, LogOut, Settings, Check, ChevronLeft, ChevronRight, Menu, Search, Activity, Target } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Bell, LogOut, Settings, Check, ChevronLeft, ChevronRight, Menu, Search, Activity, Target, X } from 'lucide-react';
 import { notificationApi, searchApi } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedBackground from './AnimatedBackground';
+
+const ROLE_COLORS = {
+    Admin: { bg: 'rgba(239,68,68,0.12)', text: '#f87171', border: 'rgba(239,68,68,0.25)' },
+    Manager: { bg: 'rgba(99,102,241,0.12)', text: '#a5b4fc', border: 'rgba(99,102,241,0.25)' },
+    Employee: { bg: 'rgba(16,185,129,0.12)', text: '#34d399', border: 'rgba(16,185,129,0.25)' },
+    Client: { bg: 'rgba(245,158,11,0.12)', text: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
+};
 
 const Layout = () => {
   const { user, logout, hasRole } = useAuthStore();
@@ -14,28 +22,28 @@ const Layout = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Employee'] },
     { name: 'Goals & Targets', href: '/goals', icon: Target, roles: ['Admin', 'Manager', 'Employee'] },
-    { name: 'Performance Appraisals', href: '/appraisals', icon: FileText, roles: ['Admin', 'Manager', 'Employee'] },
-    { name: 'Directory (HR)', href: '/employees', icon: Users, roles: ['Admin', 'Manager'] },
-    { name: 'Analytics & Reports', href: '/reports', icon: Activity, roles: ['Admin', 'Manager', 'Employee'] },
+    { name: 'Appraisals', href: '/appraisals', icon: FileText, roles: ['Admin', 'Manager', 'Employee'] },
+    { name: 'Directory', href: '/employees', icon: Users, roles: ['Admin', 'Manager'] },
+    { name: 'Analytics', href: '/reports', icon: Activity, roles: ['Admin', 'Manager', 'Employee'] },
     { name: 'System Logs', href: '/logs', icon: Settings, roles: ['Admin'] },
   ];
 
   const filteredNav = navigation.filter(item => item.roles.includes(user?.role));
+  const roleStyle = ROLE_COLORS[user?.role] || ROLE_COLORS.Employee;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef(null);
-
-  // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -45,16 +53,16 @@ const Layout = () => {
         const res = await notificationApi.getAll(true);
         if (res.success) setNotifications(res.data);
       }
-    } catch (err) { }
+    } catch (err) {}
   };
 
   const markAsRead = async (id) => {
     try {
       await notificationApi.markRead(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (err) { }
+    } catch (err) {}
   };
-    
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setIsNotifOpen(false);
@@ -70,16 +78,16 @@ const Layout = () => {
       setIsSearchOpen(false);
       return;
     }
-    const delayDebounceFn = setTimeout(async () => {
+    const t = setTimeout(async () => {
       try {
         const res = await searchApi.globalSearch(searchQuery);
         if (res?.success) {
           setSearchResults(res.data || []);
           setIsSearchOpen(true);
         }
-      } catch (err) { }
+      } catch (err) {}
     }, 400);
-    return () => clearTimeout(delayDebounceFn);
+    return () => clearTimeout(t);
   }, [searchQuery]);
 
   const handleSearchClick = (res) => {
@@ -88,224 +96,368 @@ const Layout = () => {
     if (res.type === 'Employee') navigate(`/employees/${res.id}`);
     else if (res.type === 'Goal') navigate('/goals');
     else if (res.type === 'Appraisal') navigate('/appraisals');
-    // else if (res.type === 'Department') navigate(`/departments/${res.id}`);
   };
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Enterprise Sidebar */}
-      <motion.div 
-        animate={{ width: isSidebarCollapsed ? 80 : 256 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="hidden md:flex md:flex-shrink-0 relative z-20"
-      >
-        <div className="flex w-full flex-col bg-slate-900 border-r border-gray-800 h-full">
-          <div className="flex h-16 items-center px-6 justify-between border-b border-slate-800/50">
-            {!isSidebarCollapsed && (
-              <motion.img 
-                src="/logo.jpeg" 
-                alt="PerformPro Logo" 
-                className="h-10 w-auto rounded-md shadow-md"
-                initial={{ opacity: 0, rotate: -180, scale: 0.5 }} 
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                transition={{ duration: 0.5, type: 'spring' }}
-                whileHover={{ scale: 1.05 }}
-              />
-            )}
-            {isSidebarCollapsed && (
-              <motion.img 
-                src="/logo.jpeg" 
-                alt="Logo Icon" 
-                className="h-8 w-8 rounded-md mx-auto"
-                whileHover={{ rotate: 180 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
-          
-          <button 
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute -right-3 top-20 bg-slate-800 border-2 border-slate-900 rounded-full p-1 text-gray-400 hover:text-gray-900 hover:bg-slate-700 transition"
+  const SidebarContent = ({ collapsed }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Logo Header */}
+      <div style={{
+        height: 64, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
+        padding: collapsed ? '0 1rem' : '0 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0,
+        overflow: 'hidden'
+      }}>
+        {/* Logo image — always shown */}
+        <motion.div
+          whileHover={collapsed ? { rotate: 15, scale: 1.1 } : { scale: 1.05 }}
+          transition={{ duration: 0.3 }}
+          style={{ width: 36, height: 36, borderRadius: '0.75rem', overflow: 'hidden', border: '2px solid rgba(99,102,241,0.4)', boxShadow: '0 0 14px rgba(99,102,241,0.35)', flexShrink: 0, cursor: 'pointer', background: '#0d1117' }}
+        >
+          <img src="/logo.jpeg" alt="PerformPro Logo" style={{ width: '200%', height: '100%', objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
+        </motion.div>
+        {/* Brand name — only in expanded state */}
+        {!collapsed && (
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ marginLeft: '0.75rem', overflow: 'hidden', whiteSpace: 'nowrap' }}
           >
-            {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
+            <p style={{ margin: 0, fontWeight: 800, color: '#f1f5f9', fontSize: '0.95rem', lineHeight: 1, letterSpacing: '-0.01em' }}>PerformPro</p>
+            <p style={{ margin: 0, fontSize: '0.62rem', color: '#64748b', marginTop: '0.2rem', letterSpacing: '0.03em' }}>Enterprise Platform</p>
+          </motion.div>
+        )}
+      </div>
 
-          <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4 hide-scrollbar">
-            <nav className="mt-2 flex-1 space-y-2 px-3">
-              {filteredNav.map((item) => {
-                const isActive = location.pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`${isActive
-                        ? 'bg-blue-600 text-gray-900 shadow-md shadow-blue-500/20'
-                        : 'text-gray-400 hover:bg-slate-800 hover:text-gray-900'
-                      } group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative`}
-                  >
-                    <item.icon
-                      className={`${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-900'
-                        } ${isSidebarCollapsed ? 'mr-0 mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0 transition-colors`}
-                    />
-                    {!isSidebarCollapsed && <span className="truncate">{item.name}</span>}
-                    
-                    {/* Tooltip for collapsed state */}
-                    {isSidebarCollapsed && (
-                      <div className="absolute left-14 bg-slate-800 text-gray-900 px-2 py-1 rounded text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                        {item.name}
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
+      {/* Nav Items */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }} className="hide-scrollbar">
+        {!collapsed && (
+          <p style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', paddingLeft: '0.75rem', marginBottom: '0.5rem', marginTop: '0' }}>
+            Navigation
+          </p>
+        )}
+        {filteredNav.map((item) => {
+          const isActive = location.pathname.startsWith(item.href);
+          return (
+            <Link key={item.name} to={item.href}
+              title={collapsed ? item.name : undefined}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: collapsed ? '0.75rem' : '0.65rem 0.875rem',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                borderRadius: '0.875rem', textDecoration: 'none',
+                position: 'relative',
+                background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
+                border: isActive ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent',
+                color: isActive ? '#a5b4fc' : '#64748b',
+                fontWeight: isActive ? 600 : 500,
+                fontSize: '0.85rem',
+                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+              }}
+              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#cbd5e1'; }}}
+              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="activeIndicator"
+                  style={{ position: 'absolute', left: 0, top: '20%', width: 3, height: '60%', borderRadius: 2, background: 'linear-gradient(to bottom, #6366f1, #8b5cf6)' }}
+                />
+              )}
+              <item.icon size={18} style={{ flexShrink: 0, color: isActive ? '#a5b4fc' : 'inherit' }} />
+              {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User Footer */}
+      <div style={{ padding: '0.875rem', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+        {collapsed ? (
+          <div style={{
+            width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.875rem', fontWeight: 700, margin: '0 auto',
+            background: roleStyle.bg, color: roleStyle.text, border: `1px solid ${roleStyle.border}`,
+            cursor: 'help'
+          }} title={`Role: ${user?.role || 'Guest'}`}>
+            {user?.role?.charAt(0) || 'G'}
           </div>
-          {/* Role Badge inside Sidebar */}
-          <div className="flex p-4 border-t border-slate-800 flex-col items-center">
-            {isSidebarCollapsed ? (
-                <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 text-xs font-bold border border-slate-700 hover:bg-blue-500/20 cursor-help" title={`Role: ${user?.role || 'Guest'}`}>
-                    {user?.role?.charAt(0) || 'G'}
-                </div>
-            ) : (
-                <span className="inline-flex items-center rounded-lg bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-400 ring-1 ring-inset ring-blue-500/20 w-full justify-center">
-                    Role: {user?.role || 'Guest'}
-                </span>
-            )}
+        ) : (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem',
+            borderRadius: '0.875rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.8rem', fontWeight: 700, flexShrink: 0,
+              background: roleStyle.bg, color: roleStyle.text, border: `1px solid ${roleStyle.border}`
+            }}>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.name || user?.email || 'User'}
+              </p>
+              <p style={{ margin: 0, fontSize: '0.65rem', color: roleStyle.text, fontWeight: 600 }}>{user?.role}</p>
+            </div>
+            <button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: '0.25rem', display: 'flex', borderRadius: '0.375rem', flexShrink: 0 }}
+              title="Logout"
+              onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+              onMouseLeave={e => e.currentTarget.style.color = '#475569'}
+            >
+              <LogOut size={15} />
+            </button>
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#060918' }}>
+      {/* === Animated constellation background === */}
+      <AnimatedBackground opacity={0.45} />
+
+      {/* === SIDEBAR (Desktop) === */}
+      <motion.div
+        animate={{ width: isSidebarCollapsed ? 72 : 240 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        style={{
+          flexShrink: 0, position: 'relative', zIndex: 20,
+          background: 'linear-gradient(180deg, #0d111f 0%, #0a0e1a 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          overflow: 'hidden',
+        }}
+        className="hidden md:block"
+      >
+        <SidebarContent collapsed={isSidebarCollapsed} />
+
+        {/* Collapse Toggle */}
+        <button
+          onClick={() => setIsSidebarCollapsed(v => !v)}
+          style={{
+            position: 'absolute', right: -10, top: 78,
+            width: 20, height: 20, borderRadius: '50%',
+            background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#64748b', zIndex: 30, padding: 0,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+          }}
+        >
+          {isSidebarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
       </motion.div>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col w-0 overflow-hidden relative z-10">
-        {/* Top Header */}
-        <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white/80 backdrop-blur-md px-6 shadow-sm">
-          <div className="flex flex-1 items-center">
-            <button className="md:hidden text-gray-500 hover:text-gray-700 p-2 -ml-2 rounded-md">
-                <Menu className="h-6 w-6" />
+      {/* === MOBILE NAV DRAWER === */}
+      <AnimatePresence>
+        {isMobileNavOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsMobileNavOpen(false)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(6,9,24,0.8)', backdropFilter: 'blur(4px)', zIndex: 40 }}
+            />
+            <motion.div initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }} transition={{ duration: 0.25, ease: 'easeOut' }}
+              style={{
+                position: 'fixed', left: 0, top: 0, bottom: 0, width: 240, zIndex: 50,
+                background: '#0d111f', borderRight: '1px solid rgba(255,255,255,0.06)'
+              }}
+              className="md:hidden"
+            >
+              <SidebarContent collapsed={false} />
+              <button onClick={() => setIsMobileNavOpen(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '0.5rem', padding: '0.375rem', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* === MAIN CONTENT === */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 10 }}>
+        {/* === TOP BAR === */}
+        <header style={{
+          height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 1.5rem', flexShrink: 0,
+          background: 'rgba(13,17,31,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '1rem' }}>
+            {/* Mobile menu toggle */}
+            <button onClick={() => setIsMobileNavOpen(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: '0.25rem' }}
+              className="md:hidden"
+            >
+              <Menu size={22} />
             </button>
-            
-            {/* Global Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-lg ml-6 relative" ref={searchRef}>
-              <div className="relative w-full">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Search className="h-4 w-4 text-gray-400" />
-                </div>
+
+            {/* Search */}
+            <div style={{ flex: 1, maxWidth: 440, position: 'relative' }} ref={searchRef}>
+              <div style={{ position: 'relative' }}>
+                <Search size={15} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#475569', pointerEvents: 'none' }} />
                 <input
                   type="text"
-                  className="block w-full rounded-full border border-gray-300 bg-slate-50 py-1.5 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
-                  placeholder="Globally search employees, departments, goals..."
+                  placeholder="Search employees, goals, appraisals..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   onFocus={() => { if (searchResults.length > 0) setIsSearchOpen(true); }}
+                  style={{
+                    width: '100%', padding: '0.55rem 1rem 0.55rem 2.4rem', borderRadius: '0.875rem',
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                    color: '#e2e8f0', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onFocusCapture={e => { e.target.style.borderColor = 'rgba(99,102,241,0.4)'; e.target.style.background = 'rgba(255,255,255,0.08)'; }}
+                  onBlurCapture={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
                 />
               </div>
-              
-              {/* Search Dropdown */}
-              {isSearchOpen && (
-                <div className="absolute top-10 left-0 w-full bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden max-h-80 overflow-y-auto">
-                  {searchResults.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">No results found for "{searchQuery}"</div>
-                  ) : (
-                    <ul className="py-2">
-                      {searchResults.map((res, i) => (
-                        <li 
-                          key={i} 
-                          onClick={() => handleSearchClick(res)}
-                          className="px-4 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+              {/* Search dropdown */}
+              <AnimatePresence>
+                {isSearchOpen && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                    style={{
+                      position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 60,
+                      background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1rem',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.5)', overflow: 'hidden', maxHeight: 320, overflowY: 'auto'
+                    }}
+                    className="hide-scrollbar"
+                  >
+                    {searchResults.length === 0 ? (
+                      <div style={{ padding: '1.25rem', textAlign: 'center', color: '#475569', fontSize: '0.85rem' }}>
+                        No results for "{searchQuery}"
+                      </div>
+                    ) : (
+                      searchResults.map((res, i) => (
+                        <div key={i} onClick={() => handleSearchClick(res)}
+                          style={{ padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold uppercase tracking-wider text-blue-500 bg-blue-50 px-2 py-0.5 rounded">{res.type}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6366f1', background: 'rgba(99,102,241,0.1)', padding: '0.15rem 0.5rem', borderRadius: '999px' }}>{res.type}</span>
                           </div>
-                          <div className="text-sm font-semibold text-gray-800 mt-1">{res.title}</div>
-                          <div className="text-xs text-gray-500 flex justify-between mt-0.5">
-                            <span>{res.subtitle}</span>
-                            <span className="text-gray-400">{res.detail}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+                          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}>{res.title}</p>
+                          <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: '#475569' }}>{res.subtitle}</p>
+                        </div>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
-          <div className="ml-4 flex items-center md:ml-6 space-x-4">
-            <div className="relative" ref={notifRef}>
-                <button 
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="rounded-full bg-white p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors relative"
-                >
-                {(notifications && notifications.length > 0) && (
-                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+
+          {/* Right: notifications + user */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '1rem' }}>
+            {/* Notifications */}
+            <div style={{ position: 'relative' }} ref={notifRef}>
+              <button onClick={() => setIsNotifOpen(v => !v)}
+                style={{
+                  position: 'relative', width: 38, height: 38, borderRadius: '0.875rem',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#64748b', transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#e2e8f0'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#64748b'; }}
+              >
+                <Bell size={17} />
+                {notifications && notifications.length > 0 && (
+                  <span style={{
+                    position: 'absolute', top: 6, right: 6, width: 8, height: 8,
+                    background: '#ef4444', borderRadius: '50%',
+                    border: '2px solid #060918'
+                  }} />
                 )}
-                <Bell className="h-5 w-5" />
-                </button>
-                
+              </button>
+
+              <AnimatePresence>
                 {isNotifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden text-left">
-                        <div className="bg-slate-50 border-b border-gray-100 px-4 py-3 font-semibold text-gray-700 flex justify-between items-center">
-                            Notifications
-                            <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{notifications?.length || 0} Unread</span>
-                        </div>
-                        <div className="max-h-80 overflow-y-auto">
-                            {(!notifications || notifications.length === 0) ? (
-                                <div className="p-4 text-center text-gray-500 text-sm">No new notifications</div>
-                            ) : (
-                                notifications.map(notif => (
-                                    <div key={notif.id} className="p-4 border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors group">
-                                        <div className="flex justify-between items-start">
-                                            <div className="pr-4">
-                                                <h4 className="text-sm font-semibold text-gray-800">{notif.title}</h4>
-                                                <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
-                                                <p className="text-[10px] text-gray-400 mt-2">{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
-                                            </div>
-                                            <button 
-                                                onClick={() => markAsRead(notif.id)}
-                                                className="text-gray-400 hover:text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                title="Mark as read"
-                                            >
-                                                <Check className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                  <motion.div initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    style={{
+                      position: 'absolute', right: 0, top: '110%', width: 320, zIndex: 60,
+                      background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1rem',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.5)', overflow: 'hidden'
+                    }}
+                  >
+                    <div style={{ padding: '0.875rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ margin: 0, fontWeight: 700, color: '#e2e8f0', fontSize: '0.875rem' }}>Notifications</p>
+                      {notifications?.length > 0 && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6366f1', background: 'rgba(99,102,241,0.12)', padding: '0.2rem 0.6rem', borderRadius: '999px', border: '1px solid rgba(99,102,241,0.2)' }}>
+                          {notifications.length} New
+                        </span>
+                      )}
                     </div>
+                    <div style={{ maxHeight: 300, overflowY: 'auto' }} className="hide-scrollbar">
+                      {(!notifications || notifications.length === 0) ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: '#475569', fontSize: '0.85rem' }}>
+                          No new notifications ✓
+                        </div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div key={notif.id}
+                            style={{ padding: '0.875rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', transition: 'background 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', marginTop: '0.4rem', flexShrink: 0 }} />
+                            <div style={{ flex: 1 }}>
+                              <p style={{ margin: 0, fontSize: '0.825rem', fontWeight: 600, color: '#e2e8f0' }}>{notif.title}</p>
+                              <p style={{ margin: '0.2rem 0 0', fontSize: '0.775rem', color: '#64748b' }}>{notif.message}</p>
+                              <p style={{ margin: '0.3rem 0 0', fontSize: '0.7rem', color: '#334155' }}>{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
+                            </div>
+                            <button onClick={() => markAsRead(notif.id)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#334155', padding: '0.2rem', borderRadius: '0.375rem', flexShrink: 0, display: 'flex' }}
+                              title="Dismiss"
+                              onMouseEnter={e => e.currentTarget.style.color = '#34d399'}
+                              onMouseLeave={e => e.currentTarget.style.color = '#334155'}
+                            >
+                              <Check size={14} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
             </div>
 
-            <div className="relative flex items-center gap-3 pl-4 border-l border-gray-200">
-              <Link to="/profile" className="flex flex-col text-right hover:text-blue-600 transition-colors">
-                <span className="text-sm font-semibold text-gray-700">{user?.name || user?.email || 'User'}</span>
-                <span className="text-[10px] text-gray-400">View Profile</span>
-              </Link>
-              <Link to="/profile" className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200 cursor-pointer hover:bg-indigo-200 transition-colors">
+            {/* User avatar */}
+            <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none', padding: '0.375rem 0.625rem', borderRadius: '0.875rem', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)', transition: 'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', background: roleStyle.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.75rem', fontWeight: 700, color: roleStyle.text,
+                border: `1px solid ${roleStyle.border}`, flexShrink: 0
+              }}>
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </Link>
-              <button onClick={logout} className="ml-2 text-gray-500 hover:text-red-600 transition p-1" title="Logout">
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
+              </div>
+              <div className="hidden md:block">
+                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1', lineHeight: 1 }}>{user?.name || 'User'}</p>
+                <p style={{ margin: '0.15rem 0 0', fontSize: '0.65rem', color: roleStyle.text, lineHeight: 1 }}>{user?.role}</p>
+              </div>
+            </Link>
           </div>
         </header>
 
-        <main className="relative flex-1 overflow-y-auto focus:outline-none">
-          <div className="py-6 px-4 sm:px-6 md:px-8">
-            {/* Page content injected here */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="h-full"
-              >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+        {/* === PAGE CONTENT === */}
+        <main style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }} className="hide-scrollbar">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

@@ -92,10 +92,13 @@ def get_goals(
     current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER]))
 ):
     if current_user.role == RoleEnum.ADMIN:
+        # Admins see everything
         goals = db.query(Goal).all()
     elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
         emp_id = current_user.employee_profile.id
-        # Manager sees team goals (employees reporting to them)
+        # Managers see:
+        # 1. Goals of employees reporting to them
+        # 2. Approved goals of everyone (if needed for global view, but let's stick to team for now)
         goals = db.query(Goal).join(Employee).filter(Employee.manager_id == emp_id).all()
     else:
         goals = []
@@ -150,24 +153,66 @@ def approve_goal(
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-        
+
     goal.status = "Approved"
     db.commit()
-    
-    # Notify Employee
-    emp_user = db.query(User).join(Employee).filter(Employee.id == goal.employee_id).first()
-    if emp_user:
-        notification_service.create_notification(
-            db, 
-            user_id=emp_user.id, 
-            title="Goal Approved", 
-            message=f"Your goal '{goal.title}' has been approved."
-        )
+    db.refresh(goal)
 
-    # Audit Log
-    audit_service.log_action(db, current_user.id, "approved", "Goal", goal.id, {"title": goal.title})
+    # Notify Employee (non-blocking)
+    try:
+        emp = db.query(Employee).filter(Employee.id == goal.employee_id).first()
+        if emp and emp.user_id:
+            notification_service.create_notification(
+                db,
+                user_id=emp.user_id,
+                title="Goal Approved",
+                message=f"Your goal '{goal.title}' has been approved and is now active."
+            )
+    except Exception:
+        pass
+
+    # Audit Log (non-blocking)
+    try:
+        audit_service.log_action(db, current_user.id, "approved", "Goal", goal.id, {"title": goal.title})
+    except Exception:
+        pass
 
     return {"success": True, "data": GoalResponse.from_orm(goal).dict(), "message": "Goal approved"}
+
+@router.put("/{goal_id}/deny", response_model=dict)
+def deny_goal(
+    goal_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER]))
+):
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+
+    goal.status = "Rejected"
+    db.commit()
+    db.refresh(goal)
+
+    # Notify Employee (non-blocking)
+    try:
+        emp = db.query(Employee).filter(Employee.id == goal.employee_id).first()
+        if emp and emp.user_id:
+            notification_service.create_notification(
+                db,
+                user_id=emp.user_id,
+                title="Goal Rejected",
+                message=f"Your goal '{goal.title}' has been rejected by your manager."
+            )
+    except Exception:
+        pass
+
+    # Audit Log (non-blocking)
+    try:
+        audit_service.log_action(db, current_user.id, "rejected", "Goal", goal.id, {"title": goal.title})
+    except Exception:
+        pass
+
+    return {"success": True, "data": GoalResponse.from_orm(goal).dict(), "message": "Goal rejected"}
 
 @router.put("/{goal_id}/complete", response_model=dict)
 def complete_goal(

@@ -9,33 +9,55 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
-const StatCard = ({ title, value, icon: Icon, trend }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden"
-  >
-    <div className="flex items-center justify-between z-10 relative">
-      <div>
-        <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-        <div className="flex items-baseline mb-1">
-          <p className="text-3xl font-bold border-b-2 border-blue-500/20 text-gray-900 pb-1">{value || 0}</p>
+const CARD_GRADIENTS = [
+  { from: '#6366f1', to: '#8b5cf6' },
+  { from: '#06b6d4', to: '#6366f1' },
+  { from: '#10b981', to: '#06b6d4' },
+  { from: '#f59e0b', to: '#ef4444' },
+  { from: '#ec4899', to: '#8b5cf6' },
+  { from: '#f59e0b', to: '#10b981' },
+  { from: '#ef4444', to: '#f59e0b' },
+];
+
+const StatCard = ({ title, value, icon: Icon, trend, colorIdx = 0, pending }) => {
+  const grad = CARD_GRADIENTS[colorIdx % CARD_GRADIENTS.length];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        border: `1px solid ${pending ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: '1.25rem', padding: '1.5rem', position: 'relative',
+        overflow: 'hidden', cursor: 'default',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+        transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)'
+      }}
+    >
+      {/* Glow orb */}
+      <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%',
+        background: `radial-gradient(circle, ${grad.from}22, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', zIndex: 1, position: 'relative' }}>
+        <div>
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{title}</p>
+          <p style={{ margin: '0 0 0.4rem', fontSize: '2rem', fontWeight: 900, color: '#e2e8f0', lineHeight: 1 }}>{value ?? 0}</p>
+          {trend && (
+            <span style={{ fontSize: '0.75rem', fontWeight: 600,
+              color: trend.startsWith('+') ? '#34d399' : '#94a3b8'
+            }}>
+              {trend}
+            </span>
+          )}
         </div>
-        {trend && (
-          <span className={`text-sm ${trend.startsWith('+') ? 'text-green-600' : 'text-red-500'} font-medium`}>
-            {trend} vs last month
-          </span>
-        )}
+        <div style={{ padding: '0.75rem', borderRadius: '0.875rem', background: `linear-gradient(135deg, ${grad.from}25, ${grad.to}15)`, border: `1px solid ${grad.from}35`, flexShrink: 0 }}>
+          <Icon size={22} style={{ color: grad.from }} />
+        </div>
       </div>
-      <div className="p-4 bg-blue-50 rounded-lg text-blue-600 relative z-10 shadow-inner">
-        <Icon className="h-6 w-6" />
-      </div>
-    </div>
-    {/* Subtle decorative background */}
-    <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-50/50 rounded-full blur-2xl z-0"></div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -109,38 +131,22 @@ const Dashboard = () => {
   if (loading) return <SkeletonDashboard />;
 
   const renderRoleSpecificContent = () => {
-    switch (user?.role) {
-      case 'Admin':
-        return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-indigo-50 border border-indigo-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h3 className="text-lg font-bold text-indigo-900 mb-2">Admin Tools</h3>
-            <p className="text-indigo-700">Access System Analytics and full User Management capabilities over the entire organization.</p>
-          </motion.div>
-        );
-      case 'Manager':
-        return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h3 className="text-lg font-bold text-blue-900 mb-2">Manager Actions</h3>
-            <p className="text-blue-700">Review your Team's Performance, approve pending Appraisals, and manage goal setups.</p>
-          </motion.div>
-        );
-      case 'Employee':
-        return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-green-50 border border-green-100 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h3 className="text-lg font-bold text-green-900 mb-2">My Performance Focus</h3>
-            <p className="text-green-700">Submit Self-Appraisals, provide 360-degree feedback, and monitor your personal growth KPIs.</p>
-          </motion.div>
-        );
-      case 'Client':
-        return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Client View</h3>
-            <p className="text-gray-600">Limited Read-Only Access to selected operational metrics provided by the organization.</p>
-          </motion.div>
-        );
-      default:
-        return null;
-    }
+    const configs = {
+      Admin: { from: '#6366f1', to: '#8b5cf6', title: '⚡ Admin Control Center', text: 'Full system access: manage users, approve appraisals, view org-wide analytics and audit logs.' },
+      Manager: { from: '#06b6d4', to: '#6366f1', title: '🎯 Manager Actions', text: "Review your team's pending goals and appraisals. Approve, reject, and track performance in real time." },
+      Employee: { from: '#10b981', to: '#06b6d4', title: '📈 My Performance Hub', text: 'Submit self-appraisals, update goal progress, and monitor your personal KPI growth trajectory.' },
+      Client: { from: '#f59e0b', to: '#ef4444', title: '👁 Client Dashboard', text: 'Read-only access to selected approved metrics shared by the organization.' },
+    };
+    const cfg = configs[user?.role];
+    if (!cfg) return null;
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        style={{ borderRadius: '1.25rem', padding: '1.5rem', border: `1px solid ${cfg.from}25`, background: `linear-gradient(135deg, ${cfg.from}12, ${cfg.to}08)`, transition: 'all 0.3s' }}
+      >
+        <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 800, color: '#e2e8f0' }}>{cfg.title}</h3>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b', lineHeight: 1.6 }}>{cfg.text}</p>
+      </motion.div>
+    );
   };
 
   const handleGoalSubmit = async (e) => {
@@ -165,14 +171,15 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-end border-b border-gray-100 pb-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Enterprise Overview</h1>
-          <p className="text-gray-500 mt-1">Welcome back, {user?.email}. Here's what's happening today.</p>
+          <h1 style={{ margin: 0, fontSize: '1.625rem', fontWeight: 800, color: '#e2e8f0' }}>Enterprise Overview</h1>
+          <p style={{ margin: '0.35rem 0 0', fontSize: '0.875rem', color: '#475569' }}>Welcome back, <span style={{ color: '#a5b4fc', fontWeight: 600 }}>{user?.name || user?.email}</span>. Here's what's happening today.</p>
         </div>
-        <div className="flex space-x-3">
-          <button 
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
             onClick={async () => {
               const toastId = toast.loading("Generating report...");
               try {
@@ -181,58 +188,62 @@ const Dashboard = () => {
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = "performpro_appraisals_export.csv";
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+                document.body.appendChild(a); a.click();
+                window.URL.revokeObjectURL(url); document.body.removeChild(a);
                 toast.success("Report exported!", { id: toastId });
-              } catch (e) {
-                toast.error("Failed to export report", { id: toastId });
-              }
+              } catch (e) { toast.error("Failed to export report", { id: toastId }); }
             }}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm"
-          >
-            Export Report
-          </button>
-          <button 
+            style={{ padding: '0.6rem 1.1rem', borderRadius: '0.75rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontFamily: 'inherit', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#e2e8f0'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#94a3b8'; }}
+          >Export Report</button>
+          <button
             onClick={() => setIsGoalModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-gray-900 hover:bg-blue-700 transition shadow-sm"
-          >
-            New Goal
-          </button>
+            style={{ padding: '0.6rem 1.1rem', borderRadius: '0.75rem', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: 'white', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(99,102,241,0.3)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >+ New Goal</button>
         </div>
       </div>
 
-      {/* Goal Modal */}
+      {/* Goal Modal - dark glass */}
       {isGoalModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden"
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(6,9,24,0.8)', backdropFilter: 'blur(8px)' }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            style={{ width: '100%', maxWidth: 440, background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1.25rem', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
           >
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">Create New Goal</h3>
-              <button onClick={() => setIsGoalModalOpen(false)} className="text-gray-400 hover:text-gray-600">×</button>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(99,102,241,0.05)' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#e2e8f0' }}>Create New Goal</h3>
+              <button onClick={() => setIsGoalModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '1.25rem', padding: '0.25rem', lineHeight: 1 }}>×</button>
             </div>
-            <form onSubmit={handleGoalSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleGoalSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {['title', 'target'].map(field => (
+                <div key={field}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', marginBottom: '0.5rem', textTransform: 'capitalize', letterSpacing: '0.05em' }}>{field === 'title' ? 'GOAL TITLE' : 'TARGET / METRIC'}</label>
+                  <input required type="text"
+                    placeholder={field === 'title' ? 'e.g. Q3 Sales Quota' : 'e.g. $150,000 Revenue'}
+                    value={goalForm[field]} onChange={e => setGoalForm({...goalForm, [field]: e.target.value})}
+                    style={{ width: '100%', padding: '0.7rem 0.875rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'; }}
+                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+              ))}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Goal Title</label>
-                <input required type="text" className="w-full border-gray-300 rounded-md shadow-sm border p-2 text-sm focus:ring-blue-500 focus:border-blue-500" value={goalForm.title} onChange={e => setGoalForm({...goalForm, title: e.target.value})} placeholder="e.g. Q3 Sales Quota" />
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>DEADLINE</label>
+                <input required type="date" value={goalForm.deadline} onChange={e => setGoalForm({...goalForm, deadline: e.target.value})}
+                  style={{ width: '100%', padding: '0.7rem 0.875rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                  onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.5)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Target / Metric</label>
-                <input required type="text" className="w-full border-gray-300 rounded-md shadow-sm border p-2 text-sm focus:ring-blue-500 focus:border-blue-500" value={goalForm.target} onChange={e => setGoalForm({...goalForm, target: e.target.value})} placeholder="e.g. $150,000 Revenue" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-                <input required type="date" className="w-full border-gray-300 rounded-md shadow-sm border p-2 text-sm focus:ring-blue-500 focus:border-blue-500" value={goalForm.deadline} onChange={e => setGoalForm({...goalForm, deadline: e.target.value})} />
-              </div>
-              <div className="pt-4 flex justify-end space-x-3">
-                <button type="button" onClick={() => setIsGoalModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={submittingGoal} className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-gray-900 hover:bg-blue-700 disabled:opacity-50">
-                  {submittingGoal ? 'Saving...' : 'Save Goal'}
-                </button>
+              <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setIsGoalModalOpen(false)}
+                  style={{ padding: '0.65rem 1.125rem', borderRadius: '0.75rem', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontFamily: 'inherit' }}
+                >Cancel</button>
+                <button type="submit" disabled={submittingGoal}
+                  style={{ padding: '0.65rem 1.5rem', borderRadius: '0.75rem', fontSize: '0.875rem', fontWeight: 700, cursor: submittingGoal ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: 'white', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(99,102,241,0.3)', opacity: submittingGoal ? 0.6 : 1 }}
+                >{submittingGoal ? 'Saving...' : 'Save Goal'}</button>
               </div>
             </form>
           </motion.div>
@@ -240,134 +251,94 @@ const Dashboard = () => {
       )}
 
       {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Total Workforce"
-          value={analytics?.total_workforce || 0}
-          icon={Users}
-          trend="+12%"
-        />
-        <StatCard
-          title="Active Goals"
-          value={analytics?.active_goals || 0}
-          icon={Target}
-          trend="Current Cycle"
-        />
-        <StatCard
-          title="Active Appraisals"
-          value={analytics?.active_appraisals || 0}
-          icon={Activity}
-        />
-        <StatCard
-          title="Avg Performance KPI"
-          value={`${analytics?.avg_kpi || 0}%`}
-          icon={TrendingUp}
-          trend="+5.4%"
-        />
-        <StatCard
-          title="Top Performer"
-          value={analytics?.top_performer || "N/A"}
-          icon={Award}
-          trend="Highest Score"
-        />
-        <StatCard
-          title="Dept Engagement"
-          value={analytics?.department_engagement || "0%"}
-          icon={Activity}
-          trend="Overall"
-        />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
+        <StatCard title="Total Workforce" value={analytics?.total_workforce || 0} icon={Users} trend="+12% this quarter" colorIdx={0} />
+        <StatCard title="Approved Goals" value={analytics?.active_goals || 0} icon={Target} trend="Current Cycle" colorIdx={1} />
+        {analytics?.pending_goals > 0 && (
+          <StatCard title="Pending Approval" value={analytics?.pending_goals || 0} icon={AlertTriangle} trend="Awaiting review" colorIdx={3} pending />
+        )}
+        <StatCard title="Active Appraisals" value={analytics?.active_appraisals || 0} icon={Activity} colorIdx={2} />
+        <StatCard title="Avg KPI Score" value={`${analytics?.avg_kpi || 0}%`} icon={TrendingUp} trend="+5.4% vs last month" colorIdx={4} />
+        <StatCard title="Top Performer" value={analytics?.top_performer || 'N/A'} icon={Award} trend="Highest KPI" colorIdx={5} />
+        <StatCard title="Dept Engagement" value={analytics?.department_engagement || '0%'} icon={Zap} trend="Approved Appraisals" colorIdx={6} />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Area Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2"
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }} className="grid-cols-1 lg:grid-cols-3">
+        {/* Area Chart */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1.25rem', padding: '1.5rem' }}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-            <Activity className="w-5 h-5 mr-2 text-indigo-500" />
-            Company Performance Trends
-          </h3>
-          <div className="h-80 w-full">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <Activity size={18} style={{ color: '#6366f1' }} />
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>Company Performance Trends</h3>
+          </div>
+          <div style={{ height: 280, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPerf" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 13 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 13 }} dx={-10} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ stroke: '#9ca3af', strokeWidth: 1, strokeDasharray: '4 4' }}
-                />
-                <Area type="monotone" dataKey="score" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorPerf)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 12 }} dx={-5} />
+                <Tooltip contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem', color: '#e2e8f0' }} cursor={{ stroke: '#475569', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPerf)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
-        {/* Secondary Bar Chart (Department breakdown) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+        {/* Bar Chart */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1.25rem', padding: '1.5rem' }}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">Department Engagement</h3>
-          <div className="h-80 w-full pr-4">
+          <h3 style={{ margin: '0 0 1.5rem', fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0', textAlign: 'center' }}>Dept Engagement</h3>
+          <div style={{ height: 280, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={departmentData || []} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
+              <BarChart data={departmentData || []} layout="vertical" margin={{ top: 0, right: 8, left: 20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="rgba(255,255,255,0.04)" />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#4b5563', fontWeight: 500 }} />
-                <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px' }} />
-                <Bar dataKey="score" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
-                <Bar dataKey="engagement" fill="#E5E7EB" radius={[0, 4, 4, 0]} barSize={20} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem', color: '#e2e8f0' }} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="score" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={16} />
+                <Bar dataKey="engagement" fill="rgba(99,102,241,0.2)" radius={[0, 4, 4, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
       </div>
 
-      {/* Role-Based Panel & Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-            {renderRoleSpecificContent()}
-        </div>
-        
-        {/* Global Activity Feed */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden h-96 flex flex-col mt-8"
+      {/* Role-Based Panel + Activity Feed */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }} className="grid-cols-1 lg:grid-cols-3">
+        <div>{renderRoleSpecificContent()}</div>
+
+        {/* Activity Feed */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1.25rem', padding: '1.5rem', height: 380, display: 'flex', flexDirection: 'column', marginTop: 0 }}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-gray-500" />
-            Global Activity Feed
-          </h3>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {(!activities || activities?.length === 0) ? (
-                <p className="text-gray-500 text-sm text-center mt-4">No recent activity.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+            <Clock size={16} style={{ color: '#64748b' }} />
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>Activity Feed</h3>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }} className="hide-scrollbar">
+            {(!activities || activities.length === 0) ? (
+              <p style={{ color: '#334155', fontSize: '0.85rem', textAlign: 'center', marginTop: '1rem' }}>No recent activity.</p>
             ) : (
-                activities?.map((activity, idx) => (
-                    <div key={idx} className="flex border-b border-gray-50 pb-3 last:border-0">
-                        <div className="mt-1 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mr-3"></div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-800">{activity?.action}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                                {activity?.entity} #{activity?.entity_id} • {activity?.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 'Recently'}
-                            </p>
-                        </div>
-                    </div>
-                ))
+              activities.map((activity, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', marginTop: '0.4rem', flexShrink: 0, boxShadow: '0 0 6px rgba(99,102,241,0.6)' }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1' }}>{activity?.action}</p>
+                    <p style={{ margin: '0.1rem 0 0', fontSize: '0.72rem', color: '#475569' }}>
+                      {activity?.entity} #{activity?.entity_id} · {activity?.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 'Recently'}
+                    </p>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </motion.div>
