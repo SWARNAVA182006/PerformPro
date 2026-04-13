@@ -4,10 +4,10 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App";
 import "./styles/global.css";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 if (!GOOGLE_CLIENT_ID) {
-  throw new Error("Missing VITE_GOOGLE_CLIENT_ID in environment variables");
+  console.warn('[PerformPro] VITE_GOOGLE_CLIENT_ID is not set — Google Login will be disabled.');
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
