@@ -2,12 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 passlib[bcrypt]
-pyjwt
-python-jose
-fastapi
-uvicorn
-sqlalchemy
-passlib[bcrypt]
+bcrypt==3.2.0
 pyjwt
 python-jose
 email-validator
