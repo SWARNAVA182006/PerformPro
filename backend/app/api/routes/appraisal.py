@@ -70,7 +70,7 @@ def submit_appraisal(
             )
 
     # Audit Log
-    audit_service.log_action(db, current_user.id, "submitted", "Appraisal", appraisal.id, {"period": appraisal.review_period})
+    audit_service.log_action(db, current_user.id, "submitted", "Appraisal", appraisal.id, {"period": appraisal.cycle or "H1-2026"})
 
     return {
         "success": True, 

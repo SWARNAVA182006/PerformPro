@@ -17,9 +17,11 @@ class AppraisalResponse(BaseModel):
     id: int
     employee_id: int
     date: datetime
+    created_at: datetime
     rating: float
     comments: str
     status: str
+    review_period: str
     
     class Config:
         from_attributes = True

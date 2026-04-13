@@ -112,6 +112,8 @@ def google_auth(data: GoogleLoginData, db: Session = Depends(get_db)):
         email = idinfo['email']
         provider_id = idinfo['sub']
         email_verified = idinfo.get('email_verified', False)
+        name = idinfo.get('name', email.split('@')[0])
+        picture = idinfo.get('picture', "")
 
         # 3. Reject login if email not verified
         if not email_verified:
@@ -136,6 +138,24 @@ def google_auth(data: GoogleLoginData, db: Session = Depends(get_db)):
                 user.provider = "google"
                 user.provider_id = provider_id
                 db.commit()
+                
+            # Ensure Employee profile exists
+            employee = db.query(Employee).filter(Employee.user_id == user.id).first()
+            if not employee:
+                employee = Employee(
+                    user_id=user.id,
+                    email=user.email,
+                    name=name,
+                    role=user.role.value,
+                    status="Active",
+                    profile_image_url=picture
+                )
+                db.add(employee)
+                db.commit()
+            elif not employee.profile_image_url and picture:
+                # Update picture if it's currently missing
+                employee.profile_image_url = picture
+                db.commit()
         else:
             # Create a new user
             user = User(
@@ -148,6 +168,18 @@ def google_auth(data: GoogleLoginData, db: Session = Depends(get_db)):
             db.add(user)
             db.commit()
             db.refresh(user)
+            
+            # Auto-create Employee profile for the new user using Google details
+            new_employee = Employee(
+                user_id=user.id,
+                email=user.email,
+                name=name,
+                role=user.role.value,
+                status="Active",
+                profile_image_url=picture
+            )
+            db.add(new_employee)
+            db.commit()
 
         # Issue standard JWT token
         access_token = create_access_token(subject=user.id, provider="google")

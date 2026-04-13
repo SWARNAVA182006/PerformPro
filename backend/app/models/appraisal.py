@@ -18,3 +18,7 @@ class Appraisal(Base):
 
     employee = relationship("Employee", back_populates="appraisals", foreign_keys=[employee_id])
     manager = relationship("Employee", foreign_keys=[manager_id])
+
+    @property
+    def review_period(self):
+        return self.cycle

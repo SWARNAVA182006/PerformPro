@@ -16,7 +16,7 @@ const CARD_GRADIENTS = [
   { from: '#f59e0b', to: '#ef4444' },
   { from: '#ec4899', to: '#8b5cf6' },
   { from: '#f59e0b', to: '#10b981' },
-  { from: '#ef4444', to: '#f59e0b' },
+  { from: '#ef4444', to: '#f9a515ff' },
 ];
 
 const StatCard = ({ title, value, icon: Icon, trend, colorIdx = 0, pending }) => {
