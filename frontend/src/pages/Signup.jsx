@@ -160,9 +160,9 @@ const Signup = () => {
                   }}
                 />
                 <button type="button" onClick={() => setShowPass(v => !v)}
-                  style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#334155', padding: '0.2rem', transition: 'color 0.2s' }}
+                  style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0.2rem', transition: 'color 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#94a3b8'}
-                  onMouseLeave={e => e.currentTarget.style.color = '#334155'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -184,7 +184,7 @@ const Signup = () => {
                     }}
                   >
                     <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: role === r ? info.color : '#64748b' }}>{r}</p>
-                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.65rem', color: role === r ? '#94a3b8' : '#334155' }}>{info.desc}</p>
+                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.65rem', color: role === r ? '#94a3b8' : '#64748b' }}>{info.desc}</p>
                   </motion.button>
                 ))}
               </div>
@@ -234,7 +234,7 @@ const Signup = () => {
             />
           </div>
 
-          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.825rem', color: '#334155' }}>
+          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.825rem', color: '#94a3b8' }}>
             Already have an account?{' '}
             <Link to="/login" style={{ color: '#a5b4fc', fontWeight: 700, textDecoration: 'none' }}
               onMouseEnter={e => e.target.style.color = '#818cf8'}

@@ -14,11 +14,17 @@ const STATUS_STYLE = {
     'Rejected':  { label: 'Rejected',            bg: 'rgba(239,68,68,0.12)',  color: '#f87171', border: 'rgba(239,68,68,0.25)' },
 };
 
-const GoalCard = ({ goal, isManagerOrAdmin, onApprove, onDeny, onUpdateProgress, onComplete }) => {
+const GoalCard = ({ goal, isManagerOrAdmin, onApprove, onDeny, onUpdateProgress, onComplete, onDelete }) => {
     const deadline = goal?.deadline ? new Date(goal.deadline) : null;
     const overdue = deadline && isPast(deadline) && goal?.status !== 'Completed';
     const statusStyle = STATUS_STYLE[goal?.status] || STATUS_STYLE['Pending'];
     const progressPercent = goal?.progress || 0;
+    const [editProgress, setEditProgress] = React.useState(false);
+    const [newProgress, setNewProgress] = React.useState(progressPercent);
+
+    React.useEffect(() => {
+        setNewProgress(progressPercent);
+    }, [progressPercent]);
 
     return (
         <motion.div
@@ -95,19 +101,19 @@ const GoalCard = ({ goal, isManagerOrAdmin, onApprove, onDeny, onUpdateProgress,
                     {overdue && <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '0.1rem 0.4rem', borderRadius: '999px', border: '1px solid rgba(239,68,68,0.2)' }}>OVERDUE</span>}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
                     {/* Manager/Admin: Approve/Deny Pending goals */}
                     {goal?.status === 'Pending' && isManagerOrAdmin && (
                         <>
                             <motion.button whileTap={{ scale: 0.95 }}
                                 onClick={() => onApprove(goal.id)}
-                                style={{ padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             >
                                 <CheckCircle2 size={12} /> Approve
                             </motion.button>
                             <motion.button whileTap={{ scale: 0.95 }}
                                 onClick={() => onDeny(goal.id)}
-                                style={{ padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             >
                                 <X size={12} /> Deny
                             </motion.button>
@@ -117,21 +123,59 @@ const GoalCard = ({ goal, isManagerOrAdmin, onApprove, onDeny, onUpdateProgress,
                     {/* Employee: Update progress on approved goals */}
                     {goal?.status === 'Approved' && (
                         <>
-                            <motion.button whileTap={{ scale: 0.95 }}
-                                onClick={() => onUpdateProgress(goal.id, Math.min(100, (goal?.progress || 0) + 10))}
-                                style={{ padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                            >
-                                <TrendingUp size={12} /> +10%
-                            </motion.button>
+                            {editProgress ? (
+                                <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                        type="number" min="0" max="100"
+                                        value={newProgress}
+                                        onChange={e => {
+                                            const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                                            setNewProgress(v);
+                                        }}
+                                        style={{ width: 52, padding: '0.25rem 0.4rem', borderRadius: '0.4rem', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(99,102,241,0.4)', color: '#fff', fontSize: '0.8rem', textAlign: 'center', outline: 'none' }}
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>%</span>
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            const clamped = Math.min(100, Math.max(0, newProgress));
+                                            onUpdateProgress(goal.id, clamped);
+                                            setEditProgress(false);
+                                        }}
+                                        style={{ padding: '0.25rem 0.55rem', borderRadius: '0.4rem', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)' }}
+                                    >Save</motion.button>
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                        onClick={() => { setEditProgress(false); setNewProgress(progressPercent); }}
+                                        style={{ padding: '0.25rem 0.45rem', borderRadius: '0.4rem', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.2)' }}
+                                    >✕</motion.button>
+                                </div>
+                            ) : (
+                                <motion.button whileTap={{ scale: 0.95 }}
+                                    onClick={() => setEditProgress(true)}
+                                    style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                >
+                                    <TrendingUp size={12} /> Update
+                                </motion.button>
+                            )}
+
                             {progressPercent >= 80 && (
                                 <motion.button whileTap={{ scale: 0.95 }}
                                     onClick={() => onComplete(goal.id)}
-                                    style={{ padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                    style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                 >
                                     <CheckCircle2 size={12} /> Finish
                                 </motion.button>
                             )}
                         </>
+                    )}
+
+                    {/* Withdraw / Delete logic */}
+                    { ((goal?.status === 'Pending' && !isManagerOrAdmin) || isManagerOrAdmin) && (
+                        <motion.button whileTap={{ scale: 0.95 }}
+                            onClick={() => onDelete(goal.id)}
+                            style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.22)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                            <AlertCircle size={12} /> {isManagerOrAdmin ? 'Delete' : 'Withdraw'}
+                        </motion.button>
                     )}
                 </div>
             </div>
@@ -159,35 +203,72 @@ const Goals = () => {
     useEffect(() => { fetchGoals(); }, [user?.role]);
 
     const handleApprove = async (id) => {
+        const prev = goals;
+        setGoals(gs => gs.map(g => g.id === id ? { ...g, status: 'Approved' } : g));
         try {
             await goalApi.approve(id);
             toast.success('Goal approved!');
             fetchGoals();
-        } catch { toast.error('Failed to approve'); }
+        } catch (err) {
+            setGoals(prev);
+            toast.error(err?.detail || 'Failed to approve');
+        }
     };
 
     const handleDeny = async (id) => {
+        const prev = goals;
+        setGoals(gs => gs.map(g => g.id === id ? { ...g, status: 'Rejected' } : g));
         try {
             await goalApi.deny(id);
             toast.success('Goal denied');
             fetchGoals();
-        } catch { toast.error('Failed to deny goal'); }
+        } catch (err) {
+            setGoals(prev);
+            toast.error(err?.detail || 'Failed to deny goal');
+        }
     };
 
     const handleUpdateProgress = async (id, progress) => {
+        // Optimistic update — reflect the change immediately in local state
+        const prev = goals;
+        setGoals(gs => gs.map(g => g.id === id ? { ...g, progress } : g));
         try {
             await goalApi.update(id, { progress });
             toast.success('Progress updated!');
+            // Refresh in background to sync any server-side changes
             fetchGoals();
-        } catch { toast.error('Failed to update progress'); }
+        } catch (err) {
+            // Revert on failure
+            setGoals(prev);
+            const detail = err?.detail || err?.message || 'Failed to update progress';
+            toast.error(detail);
+        }
     };
 
     const handleComplete = async (id) => {
+        const prev = goals;
+        setGoals(gs => gs.map(g => g.id === id ? { ...g, status: 'Completed', progress: 100 } : g));
         try {
             await goalApi.complete(id);
             toast.success('Goal completed! 🎉');
             fetchGoals();
-        } catch { toast.error('Failed to complete goal'); }
+        } catch (err) {
+            setGoals(prev);
+            toast.error(err?.detail || 'Failed to complete goal');
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to withdraw/delete this goal?')) return;
+        const prev = goals;
+        setGoals(gs => gs.filter(g => g.id !== id));
+        try {
+            await goalApi.delete(id);
+            toast.success('Goal deleted/withdrawn successfully');
+        } catch (err) {
+            setGoals(prev);
+            toast.error(err?.detail || err?.detail || 'Failed to delete goal');
+        }
     };
 
     if (loading) return (
@@ -207,7 +288,7 @@ const Goals = () => {
     const completedGoals = goals.filter(g => g.status === 'Completed');
     const rejectedGoals  = goals.filter(g => g.status === 'Rejected');
 
-    const cardProps = { isManagerOrAdmin, onApprove: handleApprove, onDeny: handleDeny, onUpdateProgress: handleUpdateProgress, onComplete: handleComplete };
+    const cardProps = { isManagerOrAdmin, onApprove: handleApprove, onDeny: handleDeny, onUpdateProgress: handleUpdateProgress, onComplete: handleComplete, onDelete: handleDelete };
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -226,7 +307,7 @@ const Goals = () => {
 
             {goals.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '4rem 2rem', border: '2px dashed rgba(255,255,255,0.08)', borderRadius: '1.5rem' }}>
-                    <Target style={{ color: '#334155', margin: '0 auto 1rem' }} size={48} />
+                    <Target style={{ color: '#94a3b8', margin: '0 auto 1rem' }} size={48} />
                     <h3 style={{ color: '#e2e8f0', fontWeight: 700, margin: '0 0 0.5rem' }}>No goals found</h3>
                     <p style={{ color: '#475569', fontSize: '0.875rem', margin: 0 }}>No goals have been set yet. Create one from the Dashboard.</p>
                 </div>

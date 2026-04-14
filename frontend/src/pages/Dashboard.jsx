@@ -326,7 +326,7 @@ const Dashboard = () => {
           </div>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }} className="hide-scrollbar">
             {(!activities || activities.length === 0) ? (
-              <p style={{ color: '#334155', fontSize: '0.85rem', textAlign: 'center', marginTop: '1rem' }}>No recent activity.</p>
+              <p style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', marginTop: '1rem' }}>No recent activity.</p>
             ) : (
               activities.map((activity, idx) => (
                 <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>

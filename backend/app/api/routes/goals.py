@@ -10,7 +10,7 @@ from app.services.performance_service import performance_service
 from app.services.notification_service import notification_service
 from app.services.audit_service import audit_service
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import List, Optional
 
@@ -34,10 +34,14 @@ class GoalResponse(BaseModel):
     employee_id: int
     title: str
     target: str
-    progress: int
+    progress: int = 0
     deadline: datetime
     status: str
     created_at: datetime
+
+    @validator('progress', pre=True, always=True)
+    def coerce_progress(cls, v):
+        return v if v is not None else 0
 
     class Config:
         from_attributes = True
@@ -126,20 +130,46 @@ def update_goal(
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-        
-    if goal_update.progress is not None:
-        goal = goal_service.update_goal_progress(db, goal_id, goal_update.progress)
-        # Trigger KPI update
-        performance_service.calculate_kpi(db, goal.employee_id)
 
-    
+    is_admin_or_manager = current_user.role in [RoleEnum.ADMIN, RoleEnum.MANAGER]
+
+    # Explicitly load the employee profile from DB to avoid lazy-load failures
+    employee_profile = db.query(Employee).filter(Employee.user_id == current_user.id).first()
+    is_owner = employee_profile is not None and employee_profile.id == goal.employee_id
+
+    # Employees can only update their own goals
+    if not is_admin_or_manager and not is_owner:
+        raise HTTPException(status_code=403, detail="Not authorized to update this goal")
+
+    # Employees can only update progress on Approved goals
+    if not is_admin_or_manager:
+        if goal.status != "Approved":
+            raise HTTPException(status_code=403, detail="You can only update progress on Approved goals")
+        # Strip any fields employees cannot change (only progress allowed)
+        allowed = {"progress"}
+        forbidden = set(goal_update.dict(exclude_unset=True).keys()) - allowed
+        if forbidden:
+            raise HTTPException(status_code=403, detail=f"Employees cannot update fields: {', '.join(forbidden)}")
+
+    # Validate progress bounds
+    if goal_update.progress is not None:
+        if goal_update.progress < 0 or goal_update.progress > 100:
+            raise HTTPException(status_code=400, detail="Progress must be between 0 and 100")
+        goal_service.update_goal_progress(db, goal_id, goal_update.progress)
+        goal = db.query(Goal).filter(Goal.id == goal_id).first()
+        # Trigger KPI update (non-blocking)
+        try:
+            performance_service.calculate_kpi(db, goal.employee_id)
+        except Exception:
+            pass
+
     update_data = goal_update.dict(exclude_unset=True)
     if "progress" in update_data:
         del update_data["progress"]
-        
+
     for key, value in update_data.items():
         setattr(goal, key, value)
-        
+
     db.commit()
     db.refresh(goal)
     return {"success": True, "data": GoalResponse.from_orm(goal).dict(), "message": "Goal updated"}
@@ -240,12 +270,21 @@ def complete_goal(
 def delete_goal(
     goal_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER]))
+    current_user: User = Depends(get_current_user)
 ):
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
         
+    is_admin_or_manager = current_user.role in [RoleEnum.ADMIN, RoleEnum.MANAGER]
+    is_owner = current_user.employee_profile and current_user.employee_profile.id == goal.employee_id
+    
+    if not is_admin_or_manager:
+        if not is_owner:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this goal")
+        if goal.status != "Pending":
+            raise HTTPException(status_code=403, detail="Employees can only withdraw Pending goals")
+            
     db.delete(goal)
     db.commit()
-    return {"success": True, "data": None, "message": "Goal deleted"}
+    return {"success": True, "data": None, "message": "Goal deleted successfully"}

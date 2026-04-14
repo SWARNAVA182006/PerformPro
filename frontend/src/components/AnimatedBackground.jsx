@@ -76,7 +76,7 @@ const AnimatedBackground = ({ opacity = 1 }) => {
 
     const makeOrb = () => {
       const ang = rnd(0, Math.PI * 2);
-      const spd = rnd(0.08, 0.2);
+      const spd = rnd(0.22, 0.5);
       return {
         x: rnd(0, W), y: rnd(0, H),
         angle: ang,
@@ -116,7 +116,7 @@ const AnimatedBackground = ({ opacity = 1 }) => {
         // Randomly flip turn direction occasionally
         if (Math.random() < 0.004) o.turnRate *= -1;
         // Vary speed slightly each frame
-        o.speed = Math.max(0.05, Math.min(0.22, o.speed + (Math.random() - 0.5) * 0.008));
+        o.speed = Math.max(0.15, Math.min(0.55, o.speed + (Math.random() - 0.5) * 0.018));
 
         o.x += Math.cos(o.angle) * o.speed;
         o.y += Math.sin(o.angle) * o.speed;

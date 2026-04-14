@@ -128,4 +128,9 @@ export const reportApi = {
     downloadEmployeeCSV: (deptId) => api.get("/reports/employees", { params: { department_id: deptId }, responseType: 'blob' })
 };
 
+export const chatbotApi = {
+    query: (intent) => api.post("/chatbot/query", { intent }),
+    ping:  ()       => api.get("/chatbot/ping"),
+};
+
 export default api;

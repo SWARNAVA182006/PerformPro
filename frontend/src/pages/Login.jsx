@@ -93,7 +93,7 @@ const Login = () => {
                 <h1 style={{ margin:0, fontFamily:'var(--font-display)', fontSize:'1.75rem', fontWeight:800, color:'#f0f4ff', letterSpacing:'-0.03em', lineHeight:1 }}>
                   Perform<span style={{ background:'linear-gradient(135deg,#6366f1,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Pro</span>
                 </h1>
-                <p style={{ margin:'0.2rem 0 0', fontSize:'0.72rem', color:'#334155', fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase' }}>Enterprise Platform</p>
+                <p style={{ margin:'0.2rem 0 0', fontSize:'0.72rem', color:'#94a3b8', fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase' }}>Enterprise Platform</p>
               </div>
             </div>
 
@@ -127,7 +127,7 @@ const Login = () => {
                   onClick={() => setActiveF(i)}
                 >
                   <div style={{ width:38, height:38, borderRadius:'0.75rem', display:'flex', alignItems:'center', justifyContent:'center', background: activeF===i ? `${f.color}22` : 'rgba(255,255,255,0.04)', border:`1px solid ${activeF===i ? f.color+'35' : 'transparent'}`, flexShrink:0, transition:'all 0.3s' }}>
-                    <f.icon size={17} style={{ color: activeF===i ? f.color : '#334155', filter: activeF===i ? `drop-shadow(0 0 6px ${f.color})` : 'none', transition:'all 0.3s' }}/>
+                    <f.icon size={17} style={{ color: activeF===i ? f.color : '#94a3b8', filter: activeF===i ? `drop-shadow(0 0 6px ${f.color})` : 'none', transition:'all 0.3s' }}/>
                   </div>
                   <div>
                     <p style={{ margin:0, fontSize:'0.875rem', fontWeight:700, color: activeF===i ? '#e2e8f0' : '#475569', transition:'color 0.3s', fontFamily:'var(--font-body)' }}>{f.label}</p>
@@ -143,7 +143,7 @@ const Login = () => {
             {STATS.map((s, i) => (
               <div key={i}>
                 <p style={{ margin:0, fontFamily:'var(--font-display)', fontSize:'1.4rem', fontWeight:800, background:'linear-gradient(135deg,#6366f1,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.value}</p>
-                <p style={{ margin:'0.15rem 0 0', fontSize:'0.72rem', color:'#334155', fontWeight:600, letterSpacing:'0.04em' }}>{s.label}</p>
+                <p style={{ margin:'0.15rem 0 0', fontSize:'0.72rem', color:'#94a3b8', fontWeight:600, letterSpacing:'0.04em' }}>{s.label}</p>
               </div>
             ))}
           </motion.div>
@@ -233,9 +233,9 @@ const Login = () => {
                       }}
                     />
                     <button type="button" onClick={() => setShowPass(v=>!v)}
-                      style={{ position:'absolute', right:'0.875rem', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#334155', display:'flex', padding:'0.2rem', transition:'color 0.2s' }}
+                      style={{ position:'absolute', right:'0.875rem', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94a3b8', display:'flex', padding:'0.2rem', transition:'color 0.2s' }}
                       onMouseEnter={e => e.currentTarget.style.color='#94a3b8'}
-                      onMouseLeave={e => e.currentTarget.style.color='#334155'}
+                      onMouseLeave={e => e.currentTarget.style.color='#94a3b8'}
                     >
                       {showPass ? <EyeOff size={16}/> : <Eye size={16}/>}
                     </button>
@@ -287,7 +287,7 @@ const Login = () => {
                 />
               </div>
 
-              <p style={{ textAlign:'center', marginTop:'1.75rem', margin:'1.75rem 0 0', fontSize:'0.825rem', color:'#334155' }}>
+              <p style={{ textAlign:'center', marginTop:'1.75rem', margin:'1.75rem 0 0', fontSize:'0.825rem', color:'#94a3b8' }}>
                 Don't have an account?{' '}
                 <Link to="/signup" style={{ color:'#a5b4fc', fontWeight:700, textDecoration:'none', transition:'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color='#818cf8'}

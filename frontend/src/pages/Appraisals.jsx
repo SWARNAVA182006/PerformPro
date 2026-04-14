@@ -190,7 +190,7 @@ const ManagerReviewModal = ({ appraisal, onClose, onSubmit }) => {
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem' }}>
               {[1, 3, 5, 7, 10].map(v => (
-                <span key={v} style={{ fontSize: '0.65rem', color: '#334155' }}>{v}</span>
+                <span key={v} style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{v}</span>
               ))}
             </div>
           </div>
@@ -564,8 +564,8 @@ const Appraisals = () => {
 
             {filteredAppraisals.length === 0 && (
               <div style={{ textAlign: 'center', padding: '3rem 1.5rem', border: '2px dashed rgba(255,255,255,0.07)', borderRadius: '1.25rem' }}>
-                <FileText style={{ color: '#334155', margin: '0 auto 1rem' }} size={40} />
-                <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
+                <FileText style={{ color: '#94a3b8', margin: '0 auto 1rem' }} size={40} />
+                <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>
                   {searchQuery ? `No appraisals matching "${searchQuery}"` : 'No appraisals found yet.'}
                 </p>
               </div>

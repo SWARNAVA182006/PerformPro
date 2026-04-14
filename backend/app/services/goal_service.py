@@ -24,8 +24,9 @@ class GoalService:
         goal = db.query(Goal).filter(Goal.id == goal_id).first()
         if goal:
             goal.progress = progress
-            if progress >= 100:
-                goal.status = "Completed"
+            # Do NOT auto-complete here — the explicit /complete endpoint handles
+            # status transitions. Auto-completing would lock the goal and cause
+            # subsequent progress updates to fail (status != "Approved").
             db.commit()
             db.refresh(goal)
         return goal

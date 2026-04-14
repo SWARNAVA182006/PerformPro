@@ -6,6 +6,7 @@ import { notificationApi, searchApi } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
+import SahayakWidget from './SahayakWidget';
 
 const ROLE_COLORS = {
   Admin:    { bg: 'rgba(239,68,68,0.12)',  text: '#f87171', border: 'rgba(239,68,68,0.25)',  grad: 'linear-gradient(135deg,#ef4444,#f43f5e)' },
@@ -135,7 +136,7 @@ const Layout = () => {
       {/* Nav */}
       <nav style={{ flex:1, overflowY:'auto', padding:'1rem 0.625rem', display:'flex', flexDirection:'column', gap:'0.2rem' }} className="hide-scrollbar">
         {!col && (
-          <p style={{ fontFamily:'var(--font-display)', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.14em', color:'#334155', textTransform:'uppercase', paddingLeft:'0.75rem', marginBottom:'0.625rem', marginTop:0 }}>
+          <p style={{ fontFamily:'var(--font-display)', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.14em', color:'#94a3b8', textTransform:'uppercase', paddingLeft:'0.75rem', marginBottom:'0.625rem', marginTop:0 }}>
             Navigation
           </p>
         )}
@@ -201,9 +202,9 @@ const Layout = () => {
               <p style={{ margin:'0.1rem 0 0', fontSize:'0.65rem', color: roleStyle.text, fontWeight:700, letterSpacing:'0.04em' }}>{user?.role}</p>
             </div>
             <button onClick={logout} title="Logout"
-              style={{ background:'none', border:'none', cursor:'pointer', color:'#334155', padding:'0.3rem', display:'flex', borderRadius:'0.5rem', flexShrink:0, transition:'all 0.2s' }}
+              style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'0.3rem', display:'flex', borderRadius:'0.5rem', flexShrink:0, transition:'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.color='#f87171'; e.currentTarget.style.background='rgba(239,68,68,0.1)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color='#334155'; e.currentTarget.style.background='none'; }}
+              onMouseLeave={e => { e.currentTarget.style.color='#94a3b8'; e.currentTarget.style.background='none'; }}
             >
               <LogOut size={15} />
             </button>
@@ -292,15 +293,15 @@ const Layout = () => {
             </button>
 
             <div className="hidden md:flex" style={{ alignItems:'center', gap:'0.5rem' }}>
-              <Sparkles size={14} style={{ color:'#4a5568' }}/>
-              <span style={{ fontFamily:'var(--font-display)', fontSize:'0.78rem', color:'#334155', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+              <Sparkles size={14} style={{ color:'#94a3b8' }}/>
+              <span style={{ fontFamily:'var(--font-display)', fontSize:'0.78rem', color:'#e2e8f0', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase' }}>
                 {pageTitle}
               </span>
             </div>
 
             <div style={{ flex:1, maxWidth:420, position:'relative' }} ref={searchRef}>
               <div style={{ position:'relative' }}>
-                <Search size={14} style={{ position:'absolute', left:'0.875rem', top:'50%', transform:'translateY(-50%)', color:'#334155', pointerEvents:'none' }}/>
+                <Search size={14} style={{ position:'absolute', left:'0.875rem', top:'50%', transform:'translateY(-50%)', color:'#94a3b8', pointerEvents:'none' }}/>
                 <input
                   type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
                   onFocus={() => { if (searchResults.length) setSearchOpen(true); }}
@@ -325,7 +326,7 @@ const Layout = () => {
                     className="hide-scrollbar"
                   >
                     {!searchResults.length ? (
-                      <div style={{ padding:'1.25rem', textAlign:'center', color:'#334155', fontSize:'0.85rem' }}>No results for "{searchQ}"</div>
+                      <div style={{ padding:'1.25rem', textAlign:'center', color:'#94a3b8', fontSize:'0.85rem' }}>No results for "{searchQ}"</div>
                     ) : searchResults.map((r,i) => (
                       <div key={i} onClick={() => handleSearch(r)}
                         style={{ padding:'0.75rem 1rem', cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.04)', transition:'background 0.15s' }}
@@ -334,7 +335,8 @@ const Layout = () => {
                       >
                         <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#6366f1', background:'rgba(99,102,241,0.1)', padding:'0.15rem 0.5rem', borderRadius:'999px' }}>{r.type}</span>
                         <p style={{ margin:'0.3rem 0 0', fontSize:'0.85rem', fontWeight:600, color:'#e2e8f0' }}>{r.title}</p>
-                        <p style={{ margin:'0.1rem 0 0', fontSize:'0.75rem', color:'#475569' }}>{r.subtitle}</p>
+                        <p style={{ margin:'0.1rem 0 0', fontSize:'0.75rem', color:'#94a3b8' }}>{r.subtitle}</p>
+                        {r.detail && <p style={{ margin:'0.2rem 0 0', fontSize:'0.7rem', color:'#64748b' }}>{r.detail}</p>}
                       </div>
                     ))}
                   </motion.div>
@@ -378,7 +380,7 @@ const Layout = () => {
                     </div>
                     <div style={{ maxHeight:280, overflowY:'auto' }} className="hide-scrollbar">
                       {!notifications?.length ? (
-                        <div style={{ padding:'2rem', textAlign:'center', color:'#334155', fontSize:'0.85rem' }}>All caught up ✓</div>
+                        <div style={{ padding:'2rem', textAlign:'center', color:'#94a3b8', fontSize:'0.85rem' }}>All caught up ✓</div>
                       ) : notifications.map(n => (
                         <div key={n.id}
                           style={{ padding:'0.875rem 1rem', borderBottom:'1px solid rgba(255,255,255,0.04)', display:'flex', gap:'0.75rem', alignItems:'flex-start', transition:'background 0.15s' }}
@@ -435,6 +437,9 @@ const Layout = () => {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* ── Sahayak AI Chatbot ─────────────────────────────────────────── */}
+      <SahayakWidget user={user} />
     </div>
   );
 };
