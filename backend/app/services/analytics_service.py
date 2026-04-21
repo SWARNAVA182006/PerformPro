@@ -6,22 +6,37 @@ from app.models.department import Department
 from app.models.kpi import KPI
 import math
 import statistics
+from collections import defaultdict
 
 class AnalyticsService:
 
     @staticmethod
     def get_performance_trends(db: Session):
-        results = db.query(
-            func.strftime('%m', Appraisal.date).label('month'),
-            func.avg(Appraisal.rating).label('avg_rating')
-        ).group_by('month').order_by('month').all()
+        # DB-agnostic: pull all appraisals with a rating and group in Python
+        appraisals = db.query(Appraisal.date, Appraisal.rating).filter(
+            Appraisal.rating.isnot(None),
+            Appraisal.date.isnot(None)
+        ).all()
+
+        month_scores = defaultdict(list)
+        for date, rating in appraisals:
+            try:
+                key = (date.year * 100 + date.month, date.strftime("%b"))
+                month_scores[key].append(float(rating))
+            except Exception:
+                pass
 
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        return [{"month": months[int(m)-1], "score": round(float(r)*10, 1)} for m, r in results]
+        result = []
+        for (sort_key, month_abbr), ratings in sorted(month_scores.items()):
+            avg = sum(ratings) / len(ratings)
+            result.append({"month": month_abbr, "score": round(avg * 10, 1)})
+        return result
 
     @staticmethod
     def get_department_performance(db: Session):
+        # Employees with a department
         results = db.query(
             Department.name,
             func.avg(Employee.performance_score).label('avg_score'),
@@ -29,8 +44,17 @@ class AnalyticsService:
         ).join(Employee, Department.id == Employee.department_id)\
          .group_by(Department.name).all()
 
-        return [{"name": name, "score": round(float(score or 0), 1), "headcount": headcount}
+        data = [{"name": name, "score": round(float(score or 0), 1), "headcount": headcount}
                 for name, score, headcount in results]
+
+        # Include employees with no department as "Unassigned"
+        unassigned = db.query(Employee).filter(Employee.department_id.is_(None)).all()
+        if unassigned:
+            scores = [e.performance_score or 0 for e in unassigned]
+            avg = round(sum(scores) / len(scores), 1)
+            data.append({"name": "Unassigned", "score": avg, "headcount": len(unassigned)})
+
+        return data
 
     @staticmethod
     def _linear_regression(x_vals, y_vals):
@@ -129,7 +153,7 @@ class AnalyticsService:
             trend          = "stable"
             trend_pct      = 0.0
         else:
-            appraisal_pred = round(emp.performance_score, 1)
+            appraisal_pred = round(float(emp.performance_score or 0), 1)
             trend          = "stable"
             trend_pct      = 0.0
 
@@ -213,7 +237,7 @@ class AnalyticsService:
         return {
             "employee_id":               employee_id,
             "employee_name":             emp.name,
-            "current_score":             round(emp.performance_score, 1),
+            "current_score":             round(float(emp.performance_score or 0), 1),
             "predicted_score":           predicted_score,
             "trend":                     trend,
             "trend_pct":                 trend_pct,
@@ -246,13 +270,15 @@ class AnalyticsService:
             return {}
 
         total  = len(employees)
-        scores = [e.performance_score for e in employees]
-        avg_score = round(sum(scores) / total, 1)
+        # Guard against None performance_score values
+        scores = [float(e.performance_score) if e.performance_score is not None else 0.0
+                  for e in employees]
+        avg_score = round(sum(scores) / total, 1) if total else 0.0
 
-        # Richer segmentation
-        high_performers   = [e for e in employees if e.performance_score >= 75]
-        mid_performers    = [e for e in employees if 50 <= e.performance_score < 75]
-        at_risk           = [e for e in employees if e.performance_score < 40]
+        # Richer segmentation (guard None values)
+        high_performers   = [e for e in employees if (e.performance_score or 0) >= 75]
+        mid_performers    = [e for e in employees if 50 <= (e.performance_score or 0) < 75]
+        at_risk           = [e for e in employees if (e.performance_score or 0) < 40]
         score_stdev       = round(statistics.stdev(scores), 1) if len(scores) >= 2 else 0.0
 
         monthly_data = {}

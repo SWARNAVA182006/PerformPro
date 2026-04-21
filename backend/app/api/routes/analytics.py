@@ -8,6 +8,7 @@ from app.models.department import Department
 from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.services.analytics_service import analytics_service
+from collections import defaultdict
 import calendar
 
 router = APIRouter()
@@ -24,17 +25,17 @@ def get_department_analytics(db: Session = Depends(get_db)):
 
 @router.get("/appraisals")
 def get_appraisal_analytics(db: Session = Depends(get_db)):
-    results = db.query(
-        func.strftime('%m', Appraisal.date).label('month_num'),
-        func.count(Appraisal.id).label('count')
-    ).group_by('month_num').order_by('month_num').all()
-
-    data = []
-    for r in results:
-        if r.month_num:
-            month_abbr = calendar.month_abbr[int(r.month_num)]
-            data.append({"month": month_abbr, "count": r.count})
-
+    # DB-agnostic: group appraisals by month in Python instead of strftime (SQLite-only)
+    appraisals = db.query(Appraisal.date).filter(Appraisal.date.isnot(None)).all()
+    month_counts = defaultdict(int)
+    for (date,) in appraisals:
+        try:
+            key = (date.year * 100 + date.month, calendar.month_abbr[date.month])
+            month_counts[key] += 1
+        except Exception:
+            pass
+    data = [{"month": abbr, "count": count}
+            for (_, abbr), count in sorted(month_counts.items())]
     return {"success": True, "data": data}
 
 @router.get("/top-performers")
