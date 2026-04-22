@@ -153,8 +153,12 @@ class AnalyticsService:
             trend          = "stable"
             trend_pct      = 0.0
         else:
-            appraisal_pred = round(float(emp.performance_score or 0), 1)
-            trend          = "stable"
+            # INDUSTRY FALLBACK: Use department average if no individual data
+            dept_avg = db.query(func.avg(Employee.performance_score)).filter(
+                Employee.department_id == emp.department_id
+            ).scalar()
+            appraisal_pred = round(float(dept_avg or 65.0), 1) 
+            trend          = "baseline"
             trend_pct      = 0.0
 
         # ── 2. KPI composite (30%) ─────────────────────────────────────────
