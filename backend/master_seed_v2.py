@@ -87,32 +87,33 @@ def master_seed():
         print(f"👥 Generating 31 employees...")
         names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Heidi", "Ivan", "Judy", "Karl", "Leo", "Mona", "Nate", "Olivia", "Paul", "Quinn", "Rose", "Steve", "Tara", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zack", "Liam", "Emma", "Noah", "Olivia", "Ava"]
         
-        all_emps = []
         for i in range(len(names)):
             email = f"emp{i+1}@performpro.com"
-            u = User(email=email, hashed_password=get_password_hash("Employee@123"), role=RoleEnum.EMPLOYEE)
-            db.add(u)
-            db.commit()
-            db.refresh(u)
-            
-            dept = random.choice(depts)
-            mgr = random.choice(managers)
-            
-            e = Employee(
-                user_id=u.id, 
-                department_id=dept.id, 
-                manager_id=mgr.id, 
-                name=names[i], 
-                email=email, 
-                role=f"Staff Scientist {random.randint(1,4)}", 
-                status="Active",
-                performance_score=random.uniform(75.0, 98.0),
-                date_joined=datetime.now() - timedelta(days=random.randint(30, 730))
-            )
-            db.add(e)
-            db.commit()
-            db.refresh(e)
-            all_emps.append(e)
+            u = db.query(User).filter(User.email == email).first()
+            if not u:
+                u = User(email=email, hashed_password=get_password_hash("Employee@123"), role=RoleEnum.EMPLOYEE)
+                db.add(u)
+        db.commit() # Batch commit users
+
+        all_users = db.query(User).filter(User.email.like("emp%@performpro.com")).all()
+        for u in all_users:
+            e = db.query(Employee).filter(Employee.user_id == u.id).first()
+            if not e:
+                dept = random.choice(depts)
+                mgr = random.choice(managers)
+                e = Employee(
+                    user_id=u.id, 
+                    department_id=dept.id, 
+                    manager_id=mgr.id, 
+                    name=u.email.split('@')[0].capitalize(), 
+                    email=u.email, 
+                    role=f"Professional {random.randint(1,5)}", 
+                    status="Active",
+                    performance_score=random.uniform(75.0, 98.0),
+                    date_joined=datetime.now() - timedelta(days=random.randint(30, 730))
+                )
+                db.add(e)
+        db.commit() # Batch commit employees
 
         # 6. Seed Appraisals and Goals (to populate those graphs!)
         print("📊 Seeding Appraisals/Goals for analytics...")
