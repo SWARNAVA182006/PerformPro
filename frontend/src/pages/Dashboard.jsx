@@ -354,28 +354,28 @@ const Dashboard = () => {
         >
           {/* Org AI Insights */}
           {orgInsights && (
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-6">
+            <div className="glass-card p-6 border border-indigo-500/20">
               <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-bold text-indigo-900">AI Organization Intel</h3>
-                <span className="ml-auto text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-medium">Live</span>
+                <Brain className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-lg font-bold text-white">AI Organization Intel</h3>
+                <span className="ml-auto text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-medium border border-indigo-500/30">Live</span>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                  <p className="text-2xl font-black text-emerald-600">{orgInsights.high_performers_count}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">High Performers</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center shadow-sm">
+                  <p className="text-2xl font-black text-emerald-400">{orgInsights.high_performers_count}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">High Performers</p>
                 </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                  <p className="text-2xl font-black text-rose-500">{orgInsights.at_risk_count}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">At Risk</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center shadow-sm">
+                  <p className="text-2xl font-black text-rose-400">{orgInsights.at_risk_count}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">At Risk</p>
                 </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                  <p className="text-2xl font-black text-indigo-600">{orgInsights.predicted_next_quarter}%</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Predicted Q+1</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center shadow-sm">
+                  <p className="text-2xl font-black text-indigo-400">{orgInsights.predicted_next_quarter}%</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Predicted Q+1</p>
                 </div>
-                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                  <p className="text-2xl font-black text-purple-600">{orgInsights.org_health_score}%</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Org Health</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center shadow-sm">
+                  <p className="text-2xl font-black text-purple-400">{orgInsights.org_health_score}%</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Org Health</p>
                 </div>
               </div>
               <button
@@ -389,40 +389,40 @@ const Dashboard = () => {
 
           {/* Personal AI Prediction */}
           {myPrediction && (
-            <div className={`rounded-xl p-6 border ${
-              myPrediction.risk_level === 'Low' ? 'bg-emerald-50 border-emerald-100' :
-              myPrediction.risk_level === 'Medium' ? 'bg-yellow-50 border-yellow-100' :
-              'bg-rose-50 border-rose-100'
+            <div className={`glass-card p-6 border ${
+              myPrediction.risk_level === 'Low' ? 'border-emerald-500/20' :
+              myPrediction.risk_level === 'Medium' ? 'border-yellow-500/20' :
+              'border-rose-500/20'
             }`}>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className={`w-5 h-5 ${myPrediction.risk_level === 'Low' ? 'text-emerald-600' : myPrediction.risk_level === 'Medium' ? 'text-yellow-600' : 'text-rose-600'}`} />
-                <h3 className="text-lg font-bold text-gray-900">My AI Prediction</h3>
-                <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold ${
-                  myPrediction.risk_level === 'Low' ? 'bg-emerald-100 text-emerald-700' :
-                  myPrediction.risk_level === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-rose-100 text-rose-700'
+                <Zap className={`w-5 h-5 ${myPrediction.risk_level === 'Low' ? 'text-emerald-400' : myPrediction.risk_level === 'Medium' ? 'text-yellow-400' : 'text-rose-400'}`} />
+                <h3 className="text-lg font-bold text-white">My AI Prediction</h3>
+                <span className={`ml-auto text-xs px-2 py-0.5 rounded-full border font-bold ${
+                  myPrediction.risk_level === 'Low' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  myPrediction.risk_level === 'Medium' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                 }`}>{myPrediction.risk_level} Risk</span>
               </div>
               <div className="flex items-end gap-4 mb-4">
                 <div>
-                  <p className="text-xs text-gray-500">Current</p>
-                  <p className="text-3xl font-black text-gray-900">{myPrediction.current_score}%</p>
+                  <p className="text-xs text-slate-400">Current</p>
+                  <p className="text-3xl font-black text-white">{myPrediction.current_score}%</p>
                 </div>
-                <div className="text-gray-400 mb-2 text-xl">→</div>
+                <div className="text-slate-500 mb-2 text-xl">→</div>
                 <div>
-                  <p className="text-xs text-gray-500">Predicted</p>
-                  <p className={`text-3xl font-black ${myPrediction.risk_level === 'Low' ? 'text-emerald-600' : myPrediction.risk_level === 'Medium' ? 'text-yellow-600' : 'text-rose-600'}`}>
+                  <p className="text-xs text-slate-400">Predicted</p>
+                  <p className={`text-3xl font-black ${myPrediction.risk_level === 'Low' ? 'text-emerald-400' : myPrediction.risk_level === 'Medium' ? 'text-yellow-400' : 'text-rose-400'}`}>
                     {myPrediction.predicted_score}%
                   </p>
                 </div>
                 <div className="ml-auto text-right mb-1">
-                  <p className="text-xs text-gray-500">Confidence</p>
-                  <p className="font-bold text-gray-700">{myPrediction.confidence}%</p>
+                  <p className="text-xs text-slate-400">Confidence</p>
+                  <p className="font-bold text-indigo-300">{myPrediction.confidence}%</p>
                 </div>
               </div>
               {myPrediction.recommendations?.[0] && (
-                <div className="bg-white/80 rounded-lg p-3 flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700">{myPrediction.recommendations[0]}</p>
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-slate-300">{myPrediction.recommendations[0]}</p>
                 </div>
               )}
             </div>

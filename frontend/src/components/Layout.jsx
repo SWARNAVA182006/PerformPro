@@ -136,7 +136,7 @@ const Layout = () => {
       {/* Nav */}
       <nav style={{ flex:1, overflowY:'auto', padding:'1rem 0.625rem', display:'flex', flexDirection:'column', gap:'0.2rem' }} className="hide-scrollbar">
         {!col && (
-          <p style={{ fontFamily:'var(--font-display)', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.14em', color:'#94a3b8', textTransform:'uppercase', paddingLeft:'0.75rem', marginBottom:'0.625rem', marginTop:0 }}>
+          <p style={{ fontFamily:'var(--font-display)', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.14em', color:'#ffffff', textTransform:'uppercase', paddingLeft:'0.75rem', marginBottom:'0.625rem', marginTop:0 }}>
             Navigation
           </p>
         )}
@@ -154,14 +154,14 @@ const Layout = () => {
                 position:'relative', overflow:'hidden',
                 background: isActive ? `${item.color}18` : 'transparent',
                 border: isActive ? `1px solid ${item.color}30` : '1px solid transparent',
-                color: isActive ? item.color : '#4a5568',
+                color: isActive ? item.color : '#ffffff',
                 fontFamily: 'var(--font-body)',
                 fontWeight: isActive ? 600 : 500,
                 fontSize: '0.85rem',
                 transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
               }}
-              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.color='#94a3b8'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; }}}
-              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#4a5568'; e.currentTarget.style.borderColor='transparent'; }}}
+              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.color='#ffffff'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; }}}
+              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#ffffff'; e.currentTarget.style.borderColor='transparent'; }}}
             >
               {isActive && (
                 <motion.div layoutId="navGlow"
@@ -301,8 +301,9 @@ const Layout = () => {
 
             <div style={{ flex:1, maxWidth:420, position:'relative' }} ref={searchRef}>
               <div style={{ position:'relative' }}>
-                <Search size={14} style={{ position:'absolute', left:'0.875rem', top:'50%', transform:'translateY(-50%)', color:'#94a3b8', pointerEvents:'none' }}/>
+                <Search size={14} style={{ position:'absolute', left:'0.875rem', top:'50%', transform:'translateY(-50%)', color:'#ffffff', pointerEvents:'none' }}/>
                 <input
+                  className="search-input"
                   type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
                   onFocus={() => { if (searchResults.length) setSearchOpen(true); }}
                   placeholder="Search employees, goals, appraisals..."
@@ -311,13 +312,13 @@ const Layout = () => {
                     borderRadius:'0.875rem',
                     background:'rgba(255,255,255,0.04)',
                     border:'1px solid rgba(255,255,255,0.07)',
-                    color:'#e2e8f0', fontSize:'0.835rem',
+                    color:'#ffffff', fontSize:'0.835rem',
                     fontFamily:'var(--font-body)', outline:'none',
                     transition:'all 0.25s',
                   }}
-                  onFocus={e => { e.target.style.borderColor='rgba(99,102,241,0.45)'; e.target.style.background='rgba(255,255,255,0.07)'; e.target.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)'; }}
                   onBlur={e => { e.target.style.borderColor='rgba(255,255,255,0.07)'; e.target.style.background='rgba(255,255,255,0.04)'; e.target.style.boxShadow='none'; }}
                 />
+                <style>{`.search-input::placeholder { color: rgba(255,255,255,0.7) !important; opacity: 1 !important; }`}</style>
               </div>
               <AnimatePresence>
                 {searchOpen && (

@@ -24,8 +24,8 @@ const StatPill = ({ label, value, color = "indigo" }) => {
   };
   return (
     <div className={`bg-gradient-to-br ${colorMap[color]} border rounded-2xl p-5 flex flex-col gap-1`}>
-      <span className="text-3xl font-black text-gray-900">{value}</span>
-      <span className="text-sm text-gray-600">{label}</span>
+      <span className="text-3xl font-black text-white">{value}</span>
+      <span className="text-sm text-slate-300">{label}</span>
     </div>
   );
 };
@@ -110,27 +110,27 @@ const Reports = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Reports & Analytics</h1>
-          <p className="text-gray-600 mt-1">AI-powered performance intelligence for your organization.</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Reports & Analytics</h1>
+          <p className="text-slate-400 mt-1">AI-powered performance intelligence for your organization.</p>
         </div>
         <button
           onClick={fetchAllData}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-white border border-gray-200 transition text-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 transition text-sm"
         >
           <RefreshCw size={14} /> Refresh Data
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-white border border-gray-200 rounded-2xl border border-gray-200 w-fit">
+      <div className="flex gap-2 p-1.5 glass-card w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               activeTab === tab.id
-                ? 'bg-indigo-600 text-gray-900 shadow-lg shadow-indigo-500/20'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <tab.icon size={15} /> {tab.label}
@@ -154,14 +154,14 @@ const Reports = () => {
             )}
 
             {/* Top Performers */}
-            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <div className="glass-card p-8">
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-900">
                 <Trophy size={20} className="text-yellow-400" /> Top Performers
               </h3>
               {loading ? (
                 <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-12 bg-white border border-gray-200 rounded-xl animate-pulse" />)}</div>
               ) : topPerformers.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">No performance data yet.</p>
+                <p className="text-slate-400 text-center py-8">No performance data yet.</p>
               ) : (
                 <div className="space-y-3">
                   {topPerformers.map((emp, idx) => (
@@ -170,20 +170,20 @@ const Reports = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.08 }}
-                      className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl border border-gray-200 hover:border-indigo-500/20 transition-all"
+                      className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl hover:border-indigo-500/20 transition-all"
                     >
                       <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${
                         idx === 0 ? 'bg-yellow-400/20 text-yellow-400' :
-                        idx === 1 ? 'bg-slate-300/20 text-gray-700' :
+                        idx === 1 ? 'bg-slate-300/20 text-slate-300' :
                         idx === 2 ? 'bg-amber-600/20 text-amber-500' :
-                        'bg-white border border-gray-200 text-gray-600'
+                        'bg-white/5 border border-white/10 text-slate-400'
                       }`}>#{idx + 1}</span>
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{emp.name}</p>
-                        <p className="text-xs text-gray-600">{emp.role || 'N/A'}</p>
+                        <p className="font-semibold text-white">{emp.name}</p>
+                        <p className="text-xs text-slate-400">{emp.role || 'N/A'}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-24 bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div className="w-24 bg-white/10 h-2 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
                             style={{ width: `${Math.min(100, emp.score || 0)}%` }}
@@ -198,14 +198,14 @@ const Reports = () => {
             </div>
 
             {/* Department Performance */}
-            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <div className="glass-card p-8">
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                 <Target size={20} className="text-emerald-400" /> Department Performance
               </h3>
               {loading ? (
-                <div className="h-64 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                <div className="h-64 glass-card animate-pulse" />
               ) : departments.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">No department data yet.</p>
+                <p className="text-slate-400 text-center py-8">No department data yet.</p>
               ) : (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -231,14 +231,14 @@ const Reports = () => {
           <motion.div key="trends" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-8">
 
             {/* Performance Trend */}
-            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <div className="glass-card p-8">
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                 <Activity size={20} className="text-indigo-400" /> Performance Trend (Monthly)
               </h3>
               {loading ? (
-                <div className="h-72 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                <div className="h-72 glass-card animate-pulse" />
               ) : trends.length === 0 ? (
-                <p className="text-gray-600 text-center py-16">No appraisal data yet to trend.</p>
+                <p className="text-slate-400 text-center py-16">No appraisal data yet to trend.</p>
               ) : (
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -262,14 +262,14 @@ const Reports = () => {
 
             {/* Appraisal Volume */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <div className="glass-card p-8">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                   <BarChart3 size={20} className="text-purple-400" /> Appraisal Volume
                 </h3>
                 {loading ? (
-                  <div className="h-56 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-56 glass-card animate-pulse" />
                 ) : appraisalData.length === 0 ? (
-                  <p className="text-gray-600 text-center py-12">No appraisal data.</p>
+                  <p className="text-slate-400 text-center py-12">No appraisal data.</p>
                 ) : (
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
@@ -286,14 +286,14 @@ const Reports = () => {
               </div>
 
               {/* Pie: Department Distribution */}
-              <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <div className="glass-card p-8">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                   <Users size={20} className="text-teal-400" /> Dept Distribution
                 </h3>
                 {loading ? (
-                  <div className="h-56 bg-white border border-gray-200 rounded-xl animate-pulse" />
+                  <div className="h-56 glass-card animate-pulse" />
                 ) : departments.length === 0 ? (
-                  <p className="text-gray-600 text-center py-12">No department data.</p>
+                  <p className="text-slate-400 text-center py-12">No department data.</p>
                 ) : (
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
@@ -329,9 +329,9 @@ const Reports = () => {
 
             {/* Org AI Summary */}
             {orgInsights && (
-              <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 border border-indigo-500/20">
+              <div className="glass-card p-8 border border-indigo-500/20">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold flex items-center gap-2">
+                  <h3 className="text-xl font-bold flex items-center gap-2 text-white">
                     <Brain size={22} className="text-indigo-400" /> Organization AI Intelligence
                   </h3>
                   <span className="text-xs bg-indigo-500/15 text-indigo-400 px-3 py-1 rounded-full border border-indigo-500/20">
@@ -340,16 +340,16 @@ const Reports = () => {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 border border-gray-200">
-                    <p className="text-gray-600 text-xs mb-1">Avg Performance</p>
-                    <p className="text-3xl font-black text-gray-900">{orgInsights.avg_performance}%</p>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                    <p className="text-slate-400 text-xs mb-1">Avg Performance</p>
+                    <p className="text-3xl font-black text-white">{orgInsights.avg_performance}%</p>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 border border-gray-200">
-                    <p className="text-gray-600 text-xs mb-1">Predicted Q+1</p>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                    <p className="text-slate-400 text-xs mb-1">Predicted Q+1</p>
                     <p className="text-3xl font-black text-indigo-400">{orgInsights.predicted_next_quarter}%</p>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 border border-gray-200">
-                    <p className="text-gray-600 text-xs mb-1">Engagement Index</p>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                    <p className="text-slate-400 text-xs mb-1">Engagement Index</p>
                     <p className="text-3xl font-black text-emerald-400">{orgInsights.engagement_index}x</p>
                   </div>
                 </div>
@@ -360,25 +360,25 @@ const Reports = () => {
                       <CheckCircle size={16} className="text-emerald-400" />
                       <span className="font-bold text-emerald-400">High Performers</span>
                     </div>
-                    <p className="text-3xl font-black text-gray-900">{orgInsights.high_performers_count}</p>
-                    <p className="text-gray-600 text-sm mt-1">employees scoring 75%+</p>
+                    <p className="text-3xl font-black text-white">{orgInsights.high_performers_count}</p>
+                    <p className="text-slate-400 text-sm mt-1">employees scoring 75%+</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle size={16} className="text-rose-400" />
                       <span className="font-bold text-rose-400">At Risk</span>
                     </div>
-                    <p className="text-3xl font-black text-gray-900">{orgInsights.at_risk_count}</p>
-                    <p className="text-gray-600 text-sm mt-1">employees scoring below 40%</p>
+                    <p className="text-3xl font-black text-white">{orgInsights.at_risk_count}</p>
+                    <p className="text-slate-400 text-sm mt-1">employees scoring below 40%</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Personal Prediction */}
-            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 border border-purple-500/20">
+            <div className="glass-card p-8 border border-purple-500/20">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold flex items-center gap-2">
+                <h3 className="text-xl font-bold flex items-center gap-2 text-white">
                   <Zap size={22} className="text-yellow-400" /> My Performance Prediction
                 </h3>
                 <button
@@ -394,7 +394,7 @@ const Reports = () => {
               {!myPrediction && !loadingPrediction && (
                 <div className="text-center py-12">
                   <Brain size={48} className="mx-auto text-slate-600 mb-4" />
-                  <p className="text-gray-600">Click "Run AI Analysis" to get your personalized performance prediction based on your appraisal history and feedback.</p>
+                  <p className="text-slate-400">Click "Run AI Analysis" to get your personalized performance prediction based on your appraisal history and feedback.</p>
                 </div>
               )}
 
@@ -408,12 +408,12 @@ const Reports = () => {
               {myPrediction && !loadingPrediction && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 border border-gray-200 text-center">
-                      <p className="text-gray-600 text-xs mb-1">Current</p>
-                      <p className="text-3xl font-black text-gray-900">{myPrediction.current_score}%</p>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+                      <p className="text-slate-400 text-xs mb-1">Current</p>
+                      <p className="text-3xl font-black text-white">{myPrediction.current_score}%</p>
                     </div>
                     <div className="bg-indigo-500/10 rounded-2xl p-5 border border-indigo-500/20 text-center">
-                      <p className="text-gray-600 text-xs mb-1">Predicted</p>
+                      <p className="text-slate-400 text-xs mb-1">Predicted</p>
                       <p className="text-3xl font-black text-indigo-400">{myPrediction.predicted_score}%</p>
                     </div>
                     <div className={`rounded-2xl p-5 border text-center ${
@@ -421,22 +421,22 @@ const Reports = () => {
                       myPrediction.risk_level === 'Medium' ? 'bg-yellow-500/10 border-yellow-500/20' :
                       'bg-rose-500/10 border-rose-500/20'
                     }`}>
-                      <p className="text-gray-600 text-xs mb-1">Risk Level</p>
+                      <p className="text-slate-400 text-xs mb-1">Risk Level</p>
                       <p className={`text-xl font-black ${
                         myPrediction.risk_level === 'Low' ? 'text-emerald-400' :
                         myPrediction.risk_level === 'Medium' ? 'text-yellow-400' : 'text-rose-400'
                       }`}>{myPrediction.risk_level}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 border border-gray-200 text-center">
-                      <p className="text-gray-600 text-xs mb-1">Confidence</p>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+                      <p className="text-slate-400 text-xs mb-1">Confidence</p>
                       <p className="text-3xl font-black text-purple-400">{myPrediction.confidence}%</p>
                     </div>
                   </div>
 
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 border border-gray-200">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Zap size={16} className="text-yellow-400" />
-                      <span className="font-bold text-gray-900">AI Recommendations for You</span>
+                      <span className="font-bold text-white">AI Recommendations for You</span>
                     </div>
                     <ul className="space-y-3">
                       {myPrediction.recommendations.map((rec, i) => (
@@ -455,17 +455,17 @@ const Reports = () => {
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-white border border-gray-200 rounded-xl p-4">
-                      <p className="text-gray-600 text-xs">Appraisals</p>
-                      <p className="text-xl font-bold text-gray-900">{myPrediction.appraisal_count}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <p className="text-slate-400 text-xs">Appraisals</p>
+                      <p className="text-xl font-bold text-white">{myPrediction.appraisal_count}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-xl p-4">
-                      <p className="text-gray-600 text-xs">Skills</p>
-                      <p className="text-xl font-bold text-gray-900">{myPrediction.skill_count}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <p className="text-slate-400 text-xs">Skills</p>
+                      <p className="text-xl font-bold text-white">{myPrediction.skill_count}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-xl p-4">
-                      <p className="text-gray-600 text-xs">Positive Feedback</p>
-                      <p className="text-xl font-bold text-gray-900">{Math.round(myPrediction.feedback_sentiment_ratio * 100)}%</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <p className="text-slate-400 text-xs">Positive Feedback</p>
+                      <p className="text-xl font-bold text-white">{Math.round(myPrediction.feedback_sentiment_ratio * 100)}%</p>
                     </div>
                   </div>
                   <p className="text-xs text-slate-600 text-center">{myPrediction.model}</p>
@@ -479,10 +479,10 @@ const Reports = () => {
         {activeTab === 'exports' && (
           <motion.div key="exports" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 hover:border-indigo-500/30 transition-all border border-gray-200">
+              <div className="glass-card hover:border-indigo-500/30 transition-all p-8">
                 <BarChart3 className="h-10 w-10 text-indigo-400 mb-5" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise Report</h3>
-                <p className="text-gray-600 text-sm mb-6">Full export of appraisal ratings, goals, and performance scores for all employees.</p>
+                <h3 className="text-xl font-bold text-white mb-2">Enterprise Report</h3>
+                <p className="text-slate-400 text-sm mb-6">Full export of appraisal ratings, goals, and performance scores for all employees.</p>
                 <button
                   onClick={() => handleExport('enterprise')}
                   disabled={exporting}
@@ -492,14 +492,14 @@ const Reports = () => {
                 </button>
               </div>
 
-              <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 hover:border-emerald-500/30 transition-all border border-gray-200">
+              <div className="glass-card hover:border-emerald-500/30 transition-all p-8">
                 <FileSpreadsheet className="h-10 w-10 text-emerald-400 mb-5" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Employee Directory</h3>
-                <p className="text-gray-600 text-sm mb-6">List of all staff with status, department, and performance summaries.</p>
+                <h3 className="text-xl font-bold text-white mb-2">Employee Directory</h3>
+                <p className="text-slate-400 text-sm mb-6">List of all staff with status, department, and performance summaries.</p>
                 <button
                   onClick={() => handleExport('employee')}
                   disabled={exporting}
-                  className="w-full py-3 rounded-xl border border-gray-200 text-gray-900 hover:bg-white border border-gray-200 transition flex items-center justify-center gap-2 font-semibold"
+                  className="w-full py-3 rounded-xl border border-white/10 text-white hover:bg-white/5 transition flex items-center justify-center gap-2 font-semibold"
                 >
                   <Download size={16} /> Download CSV
                 </button>

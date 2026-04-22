@@ -104,7 +104,7 @@ const Login = () => {
               </span><br/>
               Performance
             </h2>
-            <p style={{ margin:'0 0 3rem', color:'#475569', fontSize:'1.05rem', lineHeight:1.7, maxWidth:460 }}>
+            <p style={{ margin:'0 0 3rem', color:'#cbd5e1', fontSize:'1.05rem', lineHeight:1.7, maxWidth:460 }}>
               AI-powered appraisals, real-time KPIs, and 360° feedback — all in one enterprise platform.
             </p>
           </motion.div>
@@ -130,8 +130,8 @@ const Login = () => {
                     <f.icon size={17} style={{ color: activeF===i ? f.color : '#94a3b8', filter: activeF===i ? `drop-shadow(0 0 6px ${f.color})` : 'none', transition:'all 0.3s' }}/>
                   </div>
                   <div>
-                    <p style={{ margin:0, fontSize:'0.875rem', fontWeight:700, color: activeF===i ? '#e2e8f0' : '#475569', transition:'color 0.3s', fontFamily:'var(--font-body)' }}>{f.label}</p>
-                    <p style={{ margin:0, fontSize:'0.775rem', color: activeF===i ? '#64748b' : '#2d3748', transition:'color 0.3s' }}>{f.desc}</p>
+                    <p style={{ margin:0, fontSize:'0.875rem', fontWeight:700, color: activeF===i ? '#ffffff' : '#94a3b8', transition:'color 0.3s', fontFamily:'var(--font-body)' }}>{f.label}</p>
+                    <p style={{ margin:0, fontSize:'0.775rem', color: activeF===i ? '#cbd5e1' : '#64748b', transition:'color 0.3s' }}>{f.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -180,7 +180,7 @@ const Login = () => {
                   <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#a5b4fc', letterSpacing:'0.06em', textTransform:'uppercase' }}>Secure Login</span>
                 </motion.div>
                 <h2 style={{ fontFamily:'var(--font-display)', fontSize:'1.65rem', fontWeight:800, color:'#f0f4ff', margin:'0 0 0.4rem', letterSpacing:'-0.02em' }}>Welcome back</h2>
-                <p style={{ margin:0, color:'#475569', fontSize:'0.9rem' }}>Sign in to your enterprise account</p>
+                <p style={{ margin:0, color:'#94a3b8', fontSize:'0.9rem' }}>Sign in to your enterprise account</p>
               </div>
 
               <AnimatePresence>
@@ -196,7 +196,7 @@ const Login = () => {
 
               <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
                 <div>
-                  <label style={{ display:'block', marginBottom:'0.5rem', fontSize:'0.78rem', fontWeight:600, color:'#64748b', letterSpacing:'0.04em' }}>EMAIL ADDRESS</label>
+                  <label style={{ display:'block', marginBottom:'0.5rem', fontSize:'0.78rem', fontWeight:600, color:'#cbd5e1', letterSpacing:'0.04em' }}>EMAIL ADDRESS</label>
                   <input
                     id="login-email"
                     type="email" value={email} required autoComplete="email"
@@ -215,7 +215,7 @@ const Login = () => {
                 </div>
 
                 <div>
-                  <label style={{ display:'block', marginBottom:'0.5rem', fontSize:'0.78rem', fontWeight:600, color:'#64748b', letterSpacing:'0.04em' }}>PASSWORD</label>
+                  <label style={{ display:'block', marginBottom:'0.5rem', fontSize:'0.78rem', fontWeight:600, color:'#cbd5e1', letterSpacing:'0.04em' }}>PASSWORD</label>
                   <div style={{ position:'relative' }}>
                     <input
                       id="login-password"
@@ -272,7 +272,7 @@ const Login = () => {
 
               <div style={{ display:'flex', alignItems:'center', gap:'1rem', margin:'1.5rem 0' }}>
                 <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
-                <span style={{ fontSize:'0.72rem', color:'#2d3748', fontWeight:600, letterSpacing:'0.06em' }}>OR CONTINUE WITH</span>
+                <span style={{ fontSize:'0.72rem', color:'#cbd5e1', fontWeight:600, letterSpacing:'0.06em' }}>OR CONTINUE WITH</span>
                 <div style={{ flex:1, height:'1px', background:'rgba(255,255,255,0.07)' }}/>
               </div>
 

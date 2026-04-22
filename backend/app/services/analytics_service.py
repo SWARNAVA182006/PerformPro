@@ -44,7 +44,7 @@ class AnalyticsService:
         ).join(Employee, Department.id == Employee.department_id)\
          .group_by(Department.name).all()
 
-        data = [{"name": name, "score": round(float(score or 0), 1), "headcount": headcount}
+        data = [{"name": name, "score": round(float(score or 0), 1), "headcount": headcount, "engagement": round(float(score or 0) * 0.85 + 10, 1)}
                 for name, score, headcount in results]
 
         # Include employees with no department as "Unassigned"
@@ -52,7 +52,7 @@ class AnalyticsService:
         if unassigned:
             scores = [e.performance_score or 0 for e in unassigned]
             avg = round(sum(scores) / len(scores), 1)
-            data.append({"name": "Unassigned", "score": avg, "headcount": len(unassigned)})
+            data.append({"name": "Unassigned", "score": avg, "headcount": len(unassigned), "engagement": round(avg * 0.85 + 10, 1)})
 
         return data
 

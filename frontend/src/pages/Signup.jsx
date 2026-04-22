@@ -105,7 +105,7 @@ const Signup = () => {
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.65rem', fontWeight: 800, color: '#f0f4ff', margin: '0 0 0.4rem', letterSpacing: '-0.02em' }}>
               Join <span style={{ background: 'linear-gradient(135deg,#6366f1,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>PerformPro</span>
             </h1>
-            <p style={{ margin: 0, color: '#475569', fontSize: '0.875rem' }}>Create your enterprise account</p>
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.875rem' }}>Create your enterprise account</p>
           </div>
 
           {/* Error */}
@@ -122,7 +122,7 @@ const Signup = () => {
           <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Email */}
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Email Address</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#cbd5e1', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Email Address</label>
               <input
                 id="signup-email"
                 type="email" required autoComplete="email"
@@ -142,7 +142,7 @@ const Signup = () => {
 
             {/* Password */}
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Password</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#cbd5e1', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Password</label>
               <div style={{ position: 'relative' }}>
                 <input
                   id="signup-password"
@@ -171,7 +171,7 @@ const Signup = () => {
 
             {/* Role selector */}
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Role</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#cbd5e1', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Role</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 {Object.entries(ROLE_INFO).map(([r, info]) => (
                   <motion.button key={r} type="button" whileTap={{ scale: 0.97 }}
@@ -183,8 +183,8 @@ const Signup = () => {
                       textAlign: 'left', transition: 'all 0.2s',
                     }}
                   >
-                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: role === r ? info.color : '#64748b' }}>{r}</p>
-                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.65rem', color: role === r ? '#94a3b8' : '#64748b' }}>{info.desc}</p>
+                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: role === r ? info.color : '#cbd5e1' }}>{r}</p>
+                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.65rem', color: role === r ? '#cbd5e1' : '#94a3b8' }}>{info.desc}</p>
                   </motion.button>
                 ))}
               </div>
@@ -222,7 +222,7 @@ const Signup = () => {
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-            <span style={{ fontSize: '0.72rem', color: '#2d3748', fontWeight: 600, letterSpacing: '0.06em' }}>OR CONTINUE WITH</span>
+            <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: 600, letterSpacing: '0.06em' }}>OR CONTINUE WITH</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
           </div>
 

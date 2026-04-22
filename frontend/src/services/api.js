@@ -125,7 +125,7 @@ export const notificationApi = {
 
 export const reportApi = {
     exportReport: () => api.get("/reports/export", { responseType: 'blob' }),
-    downloadEmployeeCSV: (deptId) => api.get("/reports/employees", { params: { department_id: deptId }, responseType: 'blob' })
+    downloadEmployeeCSV: (deptId) => api.get("/reports/employees", { params: deptId ? { department_id: deptId } : {}, responseType: 'blob' })
 };
 
 export const chatbotApi = {
