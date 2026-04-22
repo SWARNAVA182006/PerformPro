@@ -1,4 +1,5 @@
 import sys
+import os
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine, Base
 from app.models.user import User, RoleEnum
@@ -14,23 +15,28 @@ def master_seed():
     print("🚀 Starting Master Seed (Full Production Recovery)...")
     db = SessionLocal()
     try:
-        # 1. Clear existing data to avoid conflicts
+        # 1. Clear existing data in CORRECT ORDER to avoid FK errors
         print("🗑 Cleaning database for fresh start...")
         db.query(Appraisal).delete()
         db.query(Goal).delete()
+        
+        # Clear other tables if they exist
+        try:
+            from app.models.feedback import Feedback
+            db.query(Feedback).delete()
+        except: pass
+        
+        try:
+            from app.models.notification import Notification
+            db.query(Notification).delete()
+        except: pass
+
         db.query(Employee).delete()
-        db.query(User).filter(User.role != RoleEnum.ADMIN).delete()
+        # Delete everyone except the main admin we are logged in with
+        db.query(User).filter(User.email != "admin@performpro.com").delete()
         db.commit()
 
-        # 2. Re-create Admin (if missing)
-        admin = db.query(User).filter(User.email == "admin@performpro.com").first()
-        if not admin:
-            admin = User(email="admin@performpro.com", hashed_password=get_password_hash("Admin@123"), role=RoleEnum.ADMIN)
-            db.add(admin)
-            db.commit()
-            db.refresh(admin)
-
-        # 3. Create Departments
+        # 2. Ensure Departments exist
         depts = []
         dept_names = [
             ("Engineering", "Software Engineering & Architecture"),
@@ -40,13 +46,15 @@ def master_seed():
             ("Finance", "Fiscal Operations")
         ]
         for name, desc in dept_names:
-            d = Department(name=name, description=desc)
-            db.add(d)
-            db.commit()
-            db.refresh(d)
+            d = db.query(Department).filter(Department.name == name).first()
+            if not d:
+                d = Department(name=name, description=desc)
+                db.add(d)
+                db.commit()
+                db.refresh(d)
             depts.append(d)
 
-        # 4. Create Managers
+        # 3. Create Managers
         managers = []
         mgr_data = [
             ("Sarah Connor", "eng.manager@performpro.com", depts[0].id, "Engineering Manager"),
@@ -54,18 +62,22 @@ def master_seed():
             ("Team Manager", "manager@performpro.com", depts[0].id, "Squad Leader")
         ]
         for name, email, d_id, role in mgr_data:
-            u = User(email=email, hashed_password=get_password_hash("Admin123!"), role=RoleEnum.MANAGER)
-            db.add(u)
-            db.commit()
-            db.refresh(u)
-            e = Employee(user_id=u.id, department_id=d_id, name=name, email=email, role=role, status="Active")
-            db.add(e)
-            db.commit()
-            db.refresh(e)
+            u = db.query(User).filter(User.email == email).first()
+            if not u:
+                u = User(email=email, hashed_password=get_password_hash("Admin123!"), role=RoleEnum.MANAGER)
+                db.add(u)
+                db.commit()
+                db.refresh(u)
+            
+            e = db.query(Employee).filter(Employee.user_id == u.id).first()
+            if not e:
+                e = Employee(user_id=u.id, department_id=d_id, name=name, email=email, role=role, status="Active")
+                db.add(e)
+                db.commit()
+                db.refresh(e)
             managers.append(e)
 
-        # 5. Create 31 realistic Employees
-        print(f"👥 Generating 31 employees across {len(depts)} departments...")
+        # 4. Create 31 realistic Employees
         names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Heidi", "Ivan", "Judy", "Karl", "Leo", "Mona", "Nate", "Olivia", "Paul", "Quinn", "Rose", "Steve", "Tara", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zack", "Liam", "Emma", "Noah", "Olivia", "Ava"]
         
         all_emps = []
@@ -85,7 +97,7 @@ def master_seed():
                 manager_id=mgr.id, 
                 name=names[i], 
                 email=email, 
-                role=f"Professional Level {random.randint(1,4)}", 
+                role=f"Staff Level {random.randint(1,4)}", 
                 status="Active",
                 performance_score=random.uniform(70.0, 95.0),
                 date_joined=datetime.now() - timedelta(days=random.randint(30, 365))
@@ -95,35 +107,36 @@ def master_seed():
             db.refresh(e)
             all_emps.append(e)
 
-        # 6. Seed Appraisals (Pending Manager and Approved)
-        print("📝 Seeding Appraisals and Goals...")
-        for e in all_emps[:15]:
+        # 5. Seed Appraisals
+        for e in all_emps[:20]:
             status = "Pending Manager" if random.random() > 0.4 else "Approved"
             app = Appraisal(
                 employee_id=e.id,
                 status=status,
-                comments=f"Review for Q1 2026. Performing well in core tasks.",
+                comments=f"Self-assessment for 2026. Performing exceeding expectations.",
                 cycle="Q1 2026",
-                rating=8.0 if status == "Approved" else None
+                rating=8.5 if status == "Approved" else None,
+                date=datetime.now() - timedelta(days=random.randint(1, 60))
             )
             db.add(app)
         
-        # 7. Seed Goals
+        # 6. Seed Goals
         for e in all_emps:
             goal = Goal(
                 employee_id=e.id,
-                title=f"Strategic Objective for {e.name}",
-                description="Contribute to organizational growth through excellence.",
+                title=f"Global KPI {random.randint(100,999)}",
+                description="Restore enterprise-grade performance tracking.",
                 status="Pending" if random.random() > 0.5 else "In Progress"
             )
             db.add(goal)
 
         db.commit()
-        print(f"✅ Success! Master Seed complete. Database now has 31+ employees, {len(managers)} managers, and full data.")
+        print(f"✅ Success! Master Seed complete. 31 Employees restored.")
 
     except Exception as e:
         print(f"❌ Error during master seed: {e}")
         db.rollback()
+        raise e
     finally:
         db.close()
 
