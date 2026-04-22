@@ -87,8 +87,16 @@ def get_appraisals(
         appraisals = db.query(Appraisal).order_by(Appraisal.created_at.desc()).all()
     elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
         emp_id = current_user.employee_profile.id
+        dept_id = current_user.employee_profile.department_id
+        from sqlalchemy import or_
+        
+        # Proper Manager Visibility Algorithm
+        conditions = [Employee.manager_id == emp_id, Employee.manager_id == None]
+        if dept_id:
+            conditions.append(Employee.department_id == dept_id)
+            
         appraisals = db.query(Appraisal).join(Employee, Appraisal.employee_id == Employee.id).filter(
-            Employee.manager_id == emp_id
+            or_(*conditions)
         ).order_by(Appraisal.created_at.desc()).all()
     else:
         appraisals = []
