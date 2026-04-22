@@ -97,21 +97,23 @@ def get_goals(
 ):
     if current_user.role == RoleEnum.ADMIN:
         # Admins see everything
-        goals = db.query(Goal).all()
+        goals = db.query(Goal).order_by(Goal.created_at.desc()).all()
     elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
         emp_id = current_user.employee_profile.id
         dept_id = current_user.employee_profile.department_id
         from sqlalchemy import or_
-        
-        # Proper Manager Visibility Algorithm:
-        # 1. Direct reports (manager_id matches)
-        # 2. Same department (if assigned)
-        # 3. Unassigned employees (manager_id is None) so new signups aren't orphaned
-        conditions = [Employee.manager_id == emp_id, Employee.manager_id == None]
+
+        # Manager Visibility Algorithm (3-tier):
+        # Tier 1: Employees who explicitly report to this manager
+        # Tier 2: Employees in same department (if dept is set)
+        # Tier 3: Employees with NO manager assigned (unassigned pool) — visible to all managers
+        conditions = [Employee.manager_id == emp_id, Employee.manager_id.is_(None)]
         if dept_id:
             conditions.append(Employee.department_id == dept_id)
-            
-        goals = db.query(Goal).join(Employee).filter(or_(*conditions)).order_by(Goal.created_at.desc()).all()
+
+        goals = db.query(Goal).join(Employee).filter(
+            or_(*conditions)
+        ).order_by(Goal.created_at.desc()).all()
     else:
         goals = []
 

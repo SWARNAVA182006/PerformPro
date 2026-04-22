@@ -89,12 +89,12 @@ def get_appraisals(
         emp_id = current_user.employee_profile.id
         dept_id = current_user.employee_profile.department_id
         from sqlalchemy import or_
-        
-        # Proper Manager Visibility Algorithm
-        conditions = [Employee.manager_id == emp_id, Employee.manager_id == None]
+
+        # Manager Visibility Algorithm (3-tier):
+        conditions = [Employee.manager_id == emp_id, Employee.manager_id.is_(None)]
         if dept_id:
             conditions.append(Employee.department_id == dept_id)
-            
+
         appraisals = db.query(Appraisal).join(Employee, Appraisal.employee_id == Employee.id).filter(
             or_(*conditions)
         ).order_by(Appraisal.created_at.desc()).all()
