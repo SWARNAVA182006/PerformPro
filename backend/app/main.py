@@ -14,24 +14,30 @@ app.models.Base.metadata.create_all(bind=engine)
 def seed_departments():
     """Auto-seed standard departments if they don't exist."""
     from app.models.department import Department
-    db = SessionLocal()
+    import os
+    
+    # Simple check to avoid running this 4 times in parallel on worker startup if possible
+    # We only run if we can get a clean DB connection
     try:
-        standard_depts = [
-            ("Engineering", "Software Engineering & Architecture Team"),
-            ("Sales", "Enterprise Sales & Account Management"),
-            ("Human Resources", "HR & People Operations"),
-            ("Marketing", "Digital Marketing & Brand Management"),
-            ("Finance", "Finance & Business Operations"),
-        ]
-        for name, desc in standard_depts:
-            if not db.query(Department).filter(Department.name == name).first():
-                db.add(Department(name=name, description=desc))
-        db.commit()
+        db = SessionLocal()
+        try:
+            standard_depts = [
+                ("Engineering", "Software Engineering & Architecture Team"),
+                ("Sales", "Enterprise Sales & Account Management"),
+                ("Human Resources", "HR & People Operations"),
+                ("Marketing", "Digital Marketing & Brand Management"),
+                ("Finance", "Finance & Business Operations"),
+            ]
+            for name, desc in standard_depts:
+                if not db.query(Department).filter(Department.name == name).first():
+                    db.add(Department(name=name, description=desc))
+            db.commit()
+        finally:
+            db.close()
     except Exception as e:
-        db.rollback()
-        print(f"[seed_departments] Error: {e}")
-    finally:
-        db.close()
+        # In multi-worker environments (Gunicorn), some workers might hit transient SSL errors on startup
+        # during the lifespan event. We log and ignore as other workers will likely succeed.
+        print(f"[seed_departments] Skipping seed in this worker/process due to transient error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/employees")
 def download_employee_report(
     department_id: Optional[int] = None,
-    format: str = Query("csv", regex="^(csv|excel|pdf)$"),
+    format: str = Query("csv", pattern="^(csv|excel|pdf)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.EMPLOYEE]))
 ):
