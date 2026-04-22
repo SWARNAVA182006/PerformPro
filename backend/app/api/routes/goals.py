@@ -75,14 +75,28 @@ def create_goal(
     
     # Notify Manager
     emp = db.query(Employee).filter(Employee.id == goal.employee_id).first()
-    if emp and emp.manager_id:
-        mgr = db.query(Employee).filter(Employee.id == emp.manager_id).first()
-        if mgr and mgr.user_id:
+    if emp:
+        # Find the manager: explicit manager_id or anyone with Manager role
+        mgr = None
+        if emp.manager_id:
+            mgr = db.query(Employee).filter(Employee.id == emp.manager_id).first()
+        if not mgr:
+            # Fallback: notify all managers
+            from app.models.user import User as UserModel
+            manager_users = db.query(UserModel).filter(UserModel.role == RoleEnum.MANAGER).all()
+            for mu in manager_users:
+                notification_service.create_notification(
+                    db,
+                    user_id=mu.id,
+                    title="New Goal Pending Approval",
+                    message=f"{emp.name} created a new goal: '{goal.title}' — awaiting your approval."
+                )
+        elif mgr and mgr.user_id:
             notification_service.create_notification(
-                db, 
-                user_id=mgr.user_id, 
-                title="New Goal Created", 
-                message=f"{emp.name} created a new goal: {goal.title}"
+                db,
+                user_id=mgr.user_id,
+                title="New Goal Pending Approval",
+                message=f"{emp.name} created a new goal: '{goal.title}' — awaiting your approval."
             )
             
     # Audit Log
@@ -98,9 +112,13 @@ def get_goals(
     if current_user.role == RoleEnum.ADMIN:
         # Admins see everything
         goals = db.query(Goal).order_by(Goal.created_at.desc()).all()
-    elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
-        emp_id = current_user.employee_profile.id
-        dept_id = current_user.employee_profile.department_id
+    elif current_user.role == RoleEnum.MANAGER:
+        # Explicitly query employee profile — do NOT rely on lazy relationship
+        manager_emp = db.query(Employee).filter(Employee.user_id == current_user.id).first()
+        if not manager_emp:
+            return {"success": True, "data": [], "message": "Manager has no employee profile"}
+        emp_id  = manager_emp.id
+        dept_id = manager_emp.department_id
         from sqlalchemy import or_
 
         # Manager Visibility Algorithm (3-tier):

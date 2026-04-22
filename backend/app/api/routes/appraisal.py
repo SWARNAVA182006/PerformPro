@@ -57,17 +57,29 @@ def submit_appraisal(
         db.refresh(appraisal)
         msg = "Self appraisal submitted and is pending manager review."
     
-    # Notify Manager
+    # Notify Manager — robust: try direct manager first, fallback to all managers
     emp = db.query(Employee).filter(Employee.id == appraisal.employee_id).first()
-    if emp and emp.manager_id:
-        mgr = db.query(Employee).filter(Employee.id == emp.manager_id).first()
+    if emp:
+        mgr = None
+        if emp.manager_id:
+            mgr = db.query(Employee).filter(Employee.id == emp.manager_id).first()
         if mgr and mgr.user_id:
             notification_service.create_notification(
-                db, 
-                user_id=mgr.user_id, 
-                title="Appraisal Submitted", 
-                message=f"{emp.name} submitted a new self-appraisal awaiting your review."
+                db,
+                user_id=mgr.user_id,
+                title="Appraisal Pending Review",
+                message=f"{emp.name} submitted a self-appraisal awaiting your review."
             )
+        else:
+            # No direct manager — notify ALL managers
+            all_managers = db.query(User).filter(User.role == RoleEnum.MANAGER).all()
+            for mu in all_managers:
+                notification_service.create_notification(
+                    db,
+                    user_id=mu.id,
+                    title="Appraisal Pending Review",
+                    message=f"{emp.name or 'An employee'} submitted a self-appraisal awaiting your review."
+                )
 
     # Audit Log
     audit_service.log_action(db, current_user.id, "submitted", "Appraisal", appraisal.id, {"period": appraisal.cycle or "H1-2026"})
@@ -85,9 +97,13 @@ def get_appraisals(
 ):
     if current_user.role == RoleEnum.ADMIN:
         appraisals = db.query(Appraisal).order_by(Appraisal.created_at.desc()).all()
-    elif current_user.role == RoleEnum.MANAGER and current_user.employee_profile:
-        emp_id = current_user.employee_profile.id
-        dept_id = current_user.employee_profile.department_id
+    elif current_user.role == RoleEnum.MANAGER:
+        # Explicitly query — do NOT rely on lazy relationship
+        manager_emp = db.query(Employee).filter(Employee.user_id == current_user.id).first()
+        if not manager_emp:
+            return {"success": True, "data": []}
+        emp_id  = manager_emp.id
+        dept_id = manager_emp.department_id
         from sqlalchemy import or_
 
         # Manager Visibility Algorithm (3-tier):
