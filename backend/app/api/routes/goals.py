@@ -110,27 +110,23 @@ def get_goals(
     current_user: User = Depends(require_role([RoleEnum.ADMIN, RoleEnum.MANAGER]))
 ):
     if current_user.role == RoleEnum.ADMIN:
-        # Admins see everything
         goals = db.query(Goal).order_by(Goal.created_at.desc()).all()
     elif current_user.role == RoleEnum.MANAGER:
         # Explicitly query employee profile — do NOT rely on lazy relationship
         manager_emp = db.query(Employee).filter(Employee.user_id == current_user.id).first()
         if not manager_emp:
             return {"success": True, "data": [], "message": "Manager has no employee profile"}
-        emp_id  = manager_emp.id
-        dept_id = manager_emp.department_id
+        emp_id = manager_emp.id
         from sqlalchemy import or_
 
-        # Manager Visibility Algorithm (3-tier):
-        # Tier 1: Employees who explicitly report to this manager
-        # Tier 2: Employees in same department (if dept is set)
-        # Tier 3: Employees with NO manager assigned (unassigned pool) — visible to all managers
-        conditions = [Employee.manager_id == emp_id, Employee.manager_id.is_(None)]
-        if dept_id:
-            conditions.append(Employee.department_id == dept_id)
-
+        # Enterprise rule: Managers see
+        # 1. ALL Pending goals (need approval, no matter who submitted)
+        # 2. All goals of their direct reports (at any stage)
         goals = db.query(Goal).join(Employee).filter(
-            or_(*conditions)
+            or_(
+                Employee.manager_id == emp_id,  # direct reports at any stage
+                Goal.status == "Pending"         # all pending goals need a reviewer
+            )
         ).order_by(Goal.created_at.desc()).all()
     else:
         goals = []

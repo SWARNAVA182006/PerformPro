@@ -98,21 +98,21 @@ def get_appraisals(
     if current_user.role == RoleEnum.ADMIN:
         appraisals = db.query(Appraisal).order_by(Appraisal.created_at.desc()).all()
     elif current_user.role == RoleEnum.MANAGER:
-        # Explicitly query — do NOT rely on lazy relationship
+        # Explicit query — do NOT rely on lazy relationship
         manager_emp = db.query(Employee).filter(Employee.user_id == current_user.id).first()
         if not manager_emp:
             return {"success": True, "data": []}
-        emp_id  = manager_emp.id
-        dept_id = manager_emp.department_id
+        emp_id = manager_emp.id
         from sqlalchemy import or_
 
-        # Manager Visibility Algorithm (3-tier):
-        conditions = [Employee.manager_id == emp_id, Employee.manager_id.is_(None)]
-        if dept_id:
-            conditions.append(Employee.department_id == dept_id)
-
+        # Enterprise rule: Managers can review ANY appraisal that is
+        # still awaiting manager review (Pending Manager) — so no submission is orphaned.
+        # Additionally they always see appraisals from their direct reports at any stage.
         appraisals = db.query(Appraisal).join(Employee, Appraisal.employee_id == Employee.id).filter(
-            or_(*conditions)
+            or_(
+                Employee.manager_id == emp_id,          # direct reports at any stage
+                Appraisal.status == "Pending Manager"   # any unreviewed appraisal
+            )
         ).order_by(Appraisal.created_at.desc()).all()
     else:
         appraisals = []
