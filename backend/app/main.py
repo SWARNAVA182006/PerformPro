@@ -41,7 +41,8 @@ def seed_departments():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    seed_departments()
+    # Removing auto-seed from startup to prevent SSL gunicorn worker conflicts on Render.
+    # Manual master-reset endpoint should be used to populate production data.
     yield
 
 app = FastAPI(
