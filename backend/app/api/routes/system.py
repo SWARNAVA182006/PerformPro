@@ -67,6 +67,16 @@ def seed_pending_data(db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/master-reset")
+def master_reset_trigger(db: Session = Depends(get_db)):
+    """Triggers the full workforce restoration (31 employees)."""
+    from master_seed_v2 import master_seed
+    try:
+        master_seed()
+        return {"success": True, "message": "Database successfully reset and seeded with 31+ employees."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/health")
 def health_check():
     return {"status": "ok", "service": "PerformPro Backend"}

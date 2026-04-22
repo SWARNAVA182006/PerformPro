@@ -114,9 +114,9 @@ def get_appraisals(
         from sqlalchemy import or_
 
         # Enterprise rule: Managers can review ANY appraisal that is
-        # still awaiting manager review (Pending Manager) — so no submission is orphaned.
+        # Still awaiting manager review (Pending Manager) — so no submission is orphaned.
         # Additionally they always see appraisals from their direct reports at any stage.
-        appraisals = db.query(Appraisal).join(Employee, Appraisal.employee_id == Employee.id).filter(
+        appraisals = db.query(Appraisal).outerjoin(Employee, Appraisal.employee_id == Employee.id).filter(
             or_(
                 Employee.manager_id == emp_id,          # direct reports at any stage
                 Appraisal.status == "Pending Manager"   # any unreviewed appraisal

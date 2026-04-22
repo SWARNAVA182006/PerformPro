@@ -122,7 +122,7 @@ def get_goals(
         # Enterprise rule: Managers see
         # 1. ALL Pending goals (need approval, no matter who submitted)
         # 2. All goals of their direct reports (at any stage)
-        goals = db.query(Goal).join(Employee).filter(
+        goals = db.query(Goal).outerjoin(Employee).filter(
             or_(
                 Employee.manager_id == emp_id,  # direct reports at any stage
                 Goal.status == "Pending"         # all pending goals need a reviewer
