@@ -36,9 +36,14 @@ const AppraisalRow = ({ appraisal, canAction, onApprove, onReject, onOpenReview,
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e2e8f0' }}>Employee #{appraisal.employee_id}</span>
+          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e2e8f0' }}>
+            {appraisal.employee_name || `Employee #${appraisal.employee_id}`}
+          </span>
           <span style={{ fontSize: '0.75rem', color: '#475569' }}>·</span>
           <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{appraisal.review_period || appraisal.cycle}</span>
+          {appraisal.employee_email && (
+            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{appraisal.employee_email}</span>
+          )}
         </div>
         {appraisal.comments && (
           <p style={{ margin: '0.2rem 0 0', fontSize: '0.775rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '320px' }}>
@@ -152,7 +157,9 @@ const ManagerReviewModal = ({ appraisal, onClose, onSubmit }) => {
               Manager Evaluation
             </h3>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: '#64748b' }}>
-              Employee #{appraisal.employee_id} · {appraisal.review_period || appraisal.cycle}
+              {appraisal.employee_name || `Employee #${appraisal.employee_id}`}
+              {appraisal.employee_email && ` · ${appraisal.employee_email}`}
+              {' · '}{appraisal.review_period || appraisal.cycle}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', padding: '0.35rem 0.6rem', cursor: 'pointer', color: '#64748b', fontSize: '0.85rem' }}>✕</button>
@@ -160,19 +167,26 @@ const ManagerReviewModal = ({ appraisal, onClose, onSubmit }) => {
 
         {/* Employee self-eval summary */}
         <div style={{ padding: '1rem 1.5rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ margin: '0 0 0.5rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#475569' }}>Employee Self-Assessment</p>
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8' }}>Employee Self-Assessment</p>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
             {appraisal.rating && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Star size={14} fill="#fbbf24" style={{ color: '#fbbf24' }} />
                 <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#fbbf24' }}>Self-Rating: {appraisal.rating}/10</span>
               </div>
             )}
+            {appraisal.employee_name && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a5b4fc' }}>👤 {appraisal.employee_name}</span>
+              </div>
+            )}
           </div>
-          {appraisal.comments && (
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.825rem', color: '#94a3b8', lineHeight: 1.6, padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {appraisal.comments && appraisal.comments.trim() ? (
+            <p style={{ margin: 0, fontSize: '0.825rem', color: '#cbd5e1', lineHeight: 1.6, padding: '0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.08)' }}>
               "{appraisal.comments}"
             </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', fontStyle: 'italic' }}>No self-assessment comments provided.</p>
           )}
         </div>
 

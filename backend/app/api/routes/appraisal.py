@@ -90,6 +90,14 @@ def submit_appraisal(
         "message": msg
     }
 
+def _enrich(db, appraisal):
+    """Add employee_name/email to the serialized dict so the frontend shows real info."""
+    d = AppraisalResponse.from_orm(appraisal).dict()
+    emp = db.query(Employee).filter(Employee.id == appraisal.employee_id).first()
+    d["employee_name"]  = emp.name  if emp else f"Employee #{appraisal.employee_id}"
+    d["employee_email"] = emp.email if emp else None
+    return d
+
 @router.get("/", response_model=dict)
 def get_appraisals(
     db: Session = Depends(get_db),
@@ -117,7 +125,7 @@ def get_appraisals(
     else:
         appraisals = []
 
-    return {"success": True, "data": [AppraisalResponse.from_orm(a).dict() for a in appraisals]}
+    return {"success": True, "data": [_enrich(db, a) for a in appraisals]}
 
 @router.get("/my", response_model=dict)
 def get_my_appraisals(

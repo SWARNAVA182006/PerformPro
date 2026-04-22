@@ -52,10 +52,17 @@ class AppraisalService:
         appraisal = db.query(Appraisal).filter(Appraisal.id == appraisal_id).first()
         if not appraisal:
             raise HTTPException(status_code=404, detail="Appraisal not found")
-            
+
         appraisal.manager_id = manager_id
-        appraisal.rating = (appraisal.rating + manager_rating) / 2.0
-        appraisal.comments += f" | Manager: {manager_comments}"
+
+        # Safe rating average — guard against null self-rating
+        existing_rating = appraisal.rating or 0.0
+        appraisal.rating = round((existing_rating + manager_rating) / 2.0, 2)
+
+        # Safe comment append — guard against null comments field
+        existing_comments = appraisal.comments or ""
+        appraisal.comments = f"{existing_comments} | Manager: {manager_comments}".strip(" |")
+
         appraisal.status = "Approved" if approved else "Rejected"
         
         if approved:

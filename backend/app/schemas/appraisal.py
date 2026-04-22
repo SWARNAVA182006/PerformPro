@@ -16,6 +16,8 @@ class ManagerReviewCreate(BaseModel):
 class AppraisalResponse(BaseModel):
     id: int
     employee_id: int
+    employee_name: Optional[str] = None   # resolved in route for display
+    employee_email: Optional[str] = None
     date: Optional[datetime] = None
     created_at: Optional[datetime] = None
     rating: Optional[float] = None       # null until manager rates
