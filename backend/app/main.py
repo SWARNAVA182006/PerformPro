@@ -47,14 +47,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PerformPro – Smart Employee Performance Tracker",
-    version="1.4.0",
+    version="1.4.1",
     description="Industry-grade employee performance, appraisal & HR analytics system",
     lifespan=lifespan
 )
 
 @app.get("/version")
 def get_version():
-    return {"version": "1.2.1", "status": "updated"}
+    return {"version": app.version, "status": "live", "timestamp": "2026-04-23"}
 
 # CORS configuration
 origins = [
