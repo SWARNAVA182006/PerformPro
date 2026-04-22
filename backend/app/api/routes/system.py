@@ -68,14 +68,20 @@ def seed_pending_data(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/master-reset")
-def master_reset_trigger(db: Session = Depends(get_db)):
+def master_reset_trigger():
     """Triggers the full workforce restoration (31 employees)."""
-    from master_seed_v2 import master_seed
     try:
+        from master_seed_v2 import master_seed
         master_seed()
-        return {"success": True, "message": "Database successfully reset and seeded with 31+ employees."}
+        return {"success": True, "message": "Database recovered! 31 employees and all analytics data restored."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"MASTER RESET ERROR: {error_details}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Master Reset Failed: {str(e)}\n{error_details}"
+        )
 
 @router.get("/health")
 def health_check():

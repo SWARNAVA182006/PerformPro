@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PerformPro – Smart Employee Performance Tracker",
-    version="1.2.1",
+    version="1.3.0",
     description="Industry-grade employee performance, appraisal & HR analytics system",
     lifespan=lifespan
 )
