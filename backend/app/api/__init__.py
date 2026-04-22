@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .routes import employee, appraisal, dashboard, auth, notifications, reports, departments, uploads, goals, analytics, search, skills, feedback, chatbot, system
+from .routes import employee, appraisal, dashboard, auth, notifications, reports, departments, uploads, goals, analytics, search, skills, feedback, chatbot, system_v2 as system
 
 
 api_router = APIRouter()
