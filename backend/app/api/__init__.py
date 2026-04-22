@@ -1,9 +1,10 @@
 from fastapi import APIRouter
-from .routes import employee, appraisal, dashboard, auth, notifications, reports, departments, uploads, goals, analytics, search, skills, feedback, chatbot
+from .routes import employee, appraisal, dashboard, auth, notifications, reports, departments, uploads, goals, analytics, search, skills, feedback, chatbot, system
 
 
 api_router = APIRouter()
 
+api_router.include_router(system.router, prefix="/system", tags=["system"])
 api_router.include_router(skills.router, prefix="/employee/skills", tags=["skills"])
 api_router.include_router(feedback.router, prefix="/employee/feedback", tags=["feedback"])
 api_router.include_router(employee.router, prefix="/employee", tags=["employee"])
