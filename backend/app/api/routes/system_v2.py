@@ -67,7 +67,7 @@ def seed_pending_data(db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/master-reset")
+@router.api_route("/master-reset", methods=["GET", "POST"])
 def master_reset_trigger():
     """Triggers the full workforce restoration (31 employees)."""
     try:
