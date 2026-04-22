@@ -61,12 +61,15 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
-    "https://performpro-tau.vercel.app"
+    "https://performpro-tau.vercel.app",
+    "https://performpro.vercel.app",
+    "https://performpro-swarnava182006.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex="https://performpro-.*\.vercel\.app", # Allow all vercel preview branches
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
