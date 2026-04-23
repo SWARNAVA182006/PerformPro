@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import { appraisalApi } from '../services/api';
@@ -130,9 +131,9 @@ const ManagerReviewModal = ({ appraisal, onClose, onSubmit }) => {
     } finally { setSub(false); }
   };
 
-  return (
+  return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
+      position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(3,5,15,0.88)', backdropFilter: 'blur(12px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
     }} onClick={onClose}>
@@ -254,7 +255,8 @@ const ManagerReviewModal = ({ appraisal, onClose, onSubmit }) => {
           </div>
         </form>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

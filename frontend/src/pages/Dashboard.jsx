@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { dashboardApi, analyticsApi, goalApi, reportApi } from '../services/api';
 import useAuthStore from '../store/useAuthStore';
 import { SkeletonDashboard } from '../components/SkeletonLoader';
@@ -205,8 +206,8 @@ const Dashboard = () => {
       </div>
 
       {/* Goal Modal - dark glass */}
-      {isGoalModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(6,9,24,0.8)', backdropFilter: 'blur(8px)' }}>
+      {isGoalModalOpen && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(6,9,24,0.8)', backdropFilter: 'blur(8px)' }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -247,7 +248,7 @@ const Dashboard = () => {
               </div>
             </form>
           </motion.div>
-        </div>
+        </div>, document.body
       )}
 
       {/* Premium Stat Cards */}
