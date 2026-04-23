@@ -18,7 +18,16 @@ def master_seed():
     try:
         # Use TRUNCATE CASCADE to clear everything instantly and bypass FK locks
         print("🗑 Wiping all tables with CASCADE...")
-        db.execute(text("TRUNCATE TABLE appraisals, goals, feedback, notifications, employees, departments, users RESTART IDENTITY CASCADE"))
+        if "sqlite" in str(engine.url):
+            tables = ["appraisals", "goals", "feedback", "notifications", "employees", "departments", "users"]
+            for table in tables:
+                try:
+                    db.execute(text(f"DELETE FROM {table};"))
+                except Exception as ex:
+                    print(f"Skipping {table}: {ex}")
+                    db.rollback()
+        else:
+            db.execute(text("TRUNCATE TABLE appraisals, goals, feedback, notifications, employees, departments, users RESTART IDENTITY CASCADE"))
         db.commit()
         print("  - Database wiped clean.")
 
@@ -120,9 +129,9 @@ def master_seed():
             goal = Goal(
                 employee_id=e.id,
                 title=f"KPI Progress {random.randint(100,500)}",
-                description="Maintain high engagement scores.",
+                target="Maintain high engagement scores.",
                 status="In Progress",
-                due_date=datetime.now() + timedelta(days=90)
+                deadline=datetime.now() + timedelta(days=90)
             )
             db.add(goal)
 
