@@ -445,7 +445,7 @@ const Reports = () => {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1 }}
-                          className="flex items-start gap-3 text-sm text-gray-700"
+                          className="flex items-start gap-3 text-sm text-slate-300"
                         >
                           <CheckCircle size={15} className="text-indigo-400 mt-0.5 flex-shrink-0" />
                           {rec}
