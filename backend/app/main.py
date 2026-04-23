@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PerformPro – Smart Employee Performance Tracker",
-    version="2.1.0",
+    version="2.2.0",
     description="Industry-grade employee performance, appraisal & HR analytics system",
     lifespan=lifespan
 )
@@ -75,6 +75,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Fix for Google Auth ORB block (Add COOP Header)
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    return response
 
 import os
 os.makedirs("app/uploads", exist_ok=True)

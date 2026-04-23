@@ -13,26 +13,14 @@ import random
 from datetime import datetime, timedelta
 
 def master_seed():
-    print("🚀 Starting Hardened Master Seed (Full Production Recovery)...")
+    print("🚀 Starting Aggressive Master Seed (TRUNCATE CASCADE)...")
     db = SessionLocal()
     try:
-        # 1. Clear existing data in CORRECT ORDER to avoid FK errors
-        # Using execute(text(...)) to handle dependencies safely
-        print("🗑 Cleaning database for fresh start...")
-        
-        # Disable FK checks for the wipe (SQLite specific, but safe for Postgres if done by table)
-        # For Postgres we just delete in order.
-        tables = ["appraisals", "goals", "feedback", "notifications", "employees"]
-        for table in tables:
-            try:
-                db.execute(text(f"DELETE FROM {table}"))
-                print(f"  - Cleared {table}")
-            except Exception as e:
-                print(f"  - Skip {table} (likely missing): {e}")
-        
-        # Delete everyone except the main admin
-        db.query(User).filter(User.email != "admin@performpro.com").delete(synchronize_session=False)
+        # Use TRUNCATE CASCADE to clear everything instantly and bypass FK locks
+        print("🗑 Wiping all tables with CASCADE...")
+        db.execute(text("TRUNCATE TABLE appraisals, goals, feedback, notifications, employees, departments, users RESTART IDENTITY CASCADE"))
         db.commit()
+        print("  - Database wiped clean.")
 
         # 2. Re-create main Admin if missing (Password: Admin@123)
         admin = db.query(User).filter(User.email == "admin@performpro.com").first()
