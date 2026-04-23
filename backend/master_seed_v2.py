@@ -17,17 +17,14 @@ def master_seed():
     db = SessionLocal()
     try:
         # Use TRUNCATE CASCADE to clear everything instantly and bypass FK locks
-        print("🗑 Wiping all tables with CASCADE...")
-        if "sqlite" in str(engine.url):
-            tables = ["appraisals", "goals", "feedback", "notifications", "employees", "departments", "users"]
-            for table in tables:
-                try:
-                    db.execute(text(f"DELETE FROM {table};"))
-                except Exception as ex:
-                    print(f"Skipping {table}: {ex}")
-                    db.rollback()
-        else:
-            db.execute(text("TRUNCATE TABLE appraisals, goals, feedback, notifications, employees, departments, users RESTART IDENTITY CASCADE"))
+        # Delete from all tables directly for both SQLite and Postgres
+        tables = ["appraisals", "goals", "feedback", "notifications", "employees", "departments", "users"]
+        for table in tables:
+            try:
+                db.execute(text(f"DELETE FROM {table};"))
+            except Exception as ex:
+                print(f"Skipping {table}: {ex}")
+                db.rollback()
         db.commit()
         print("  - Database wiped clean.")
 
