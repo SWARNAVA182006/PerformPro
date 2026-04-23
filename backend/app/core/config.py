@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "803673399942-c36f4818m94ncc6e6igj3kf888ak13up.apps.googleusercontent.com")
     
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/performpro.db")
     

@@ -105,7 +105,7 @@ def master_seed():
 
         # 6. Seed Appraisals and Goals (to populate those graphs!)
         print("📊 Seeding Appraisals/Goals for analytics...")
-        for e in all_emps:
+        for e in db.query(Employee).all():
             # Add an appraisal for everyone to show data on charts
             app = Appraisal(
                 employee_id=e.id,
