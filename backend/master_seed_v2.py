@@ -112,25 +112,30 @@ def master_seed():
         # 6. Seed Appraisals and Goals (to populate those graphs!)
         print("📊 Seeding Appraisals/Goals for analytics...")
         for e in db.query(Employee).all():
-            # Add an appraisal for everyone to show data on charts
-            app = Appraisal(
-                employee_id=e.id,
-                status="Approved" if random.random() > 0.3 else "Pending Manager",
-                comments=f"Review for {e.name}. Great teamwork.",
-                cycle="Q1 2026",
-                rating=random.uniform(7.5, 9.5),
-                date=datetime.now() - timedelta(days=random.randint(1, 90))
-            )
-            db.add(app)
+            # Add 4-6 appraisals per employee spread across the last 6 months for solid trend lines
+            num_appraisals = random.randint(4, 6)
+            for m in range(num_appraisals):
+                days_ago = (m * 30) + random.randint(1, 15)
+                app = Appraisal(
+                    employee_id=e.id,
+                    status="Approved" if random.random() > 0.1 else "Pending Manager",
+                    comments=f"Review for {e.name}. Detailed feedback for month.",
+                    cycle=f"Month -{m}",
+                    rating=random.uniform(7.0, 9.8),
+                    date=datetime.now() - timedelta(days=days_ago)
+                )
+                db.add(app)
             
-            goal = Goal(
-                employee_id=e.id,
-                title=f"KPI Progress {random.randint(100,500)}",
-                target="Maintain high engagement scores.",
-                status="In Progress",
-                deadline=datetime.now() + timedelta(days=90)
-            )
-            db.add(goal)
+            # Add 3 goals per employee
+            for g in range(3):
+                goal = Goal(
+                    employee_id=e.id,
+                    title=f"Strategic Goal {random.randint(100,900)}",
+                    target=random.choice(["Increase efficiency by 15%", "Ship 3 new features", "Reduce latency by 20%", "Maintain high engagement"]),
+                    status=random.choice(["Completed", "In Progress", "Pending"]),
+                    deadline=datetime.now() + timedelta(days=random.randint(-30, 90))
+                )
+                db.add(goal)
 
         db.commit()
         print(f"✅ FINAL SUCCESS! Database restored with 31+ employees and full matching data.")
